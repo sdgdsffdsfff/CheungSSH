@@ -36,7 +36,7 @@ else
 fi
 /bin/rm -fr  /home/cheungssh/web/cheungssh 2>/dev/null
 cd /home/cheungssh/web/  &&
-unzip  -o /home/cheungssh/web/cheungssh.zip
+unzip  -o /home/cheungssh/web/cheung*.zip
 if  [ $? -ne 0 ]
 then
 	echo  "解压失败"
