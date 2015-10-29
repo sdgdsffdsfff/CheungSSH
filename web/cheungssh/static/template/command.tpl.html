@@ -70,9 +70,9 @@
                         <li style="width: 20px;height: 20px;float:left;cursor:pointer;" class="status" ng-repeat="server in group.children" ng-if="server.selected"
                             data-container="body" data-trigger="hover" data-delay="200" data-hover-hold="true"
                             data-html="true" data-placement="top"
-                            data-content-Template="../static/template/popover/serverInfo.html"
+                            data-content-Template="static/template/popover/serverInfo.html"
                             bs-popover>
-                            <img ng-src="../static/img/{{server.status == 'OK'?'green.png':server.status == 'ERR'?'red.png':'grey.png'}}" style="width: 12px;">
+                            <img ng-src="static/img/{{server.status == 'OK'?'green.png':server.status == 'ERR'?'red.png':'grey.png'}}" style="width: 12px;">
                         </li>
                     </ul>
                 </div>

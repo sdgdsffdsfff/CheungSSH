@@ -12,19 +12,6 @@ fi
 echo  "Installing......"
 setenforce 0
 useradd cheungssh -d /home/cheungssh  -s /sbin/nologin #该目录是cheungssh的工作目录， 必须创建
-mkdir -p /home/cheungssh/keyfile
-mkdir -p /home/cheungssh/scriptfile
-mkdir -p /home/cheungssh/crond
-mkdir -p /home/cheungssh/upload
-mkdir -p /home/cheungssh/download
-mkdir -p /home/cheungssh/conf
-mkdir -p /home/cheungssh/version
-mkdir -p /home/cheungssh/pid
-mkdir -p /home/cheungssh/logs
-mkdir -p /home/cheungssh/data
-mkdir -p /home/cheungssh/data/cmd/
-mkdir -p /home/cheungssh/web/cheungSSH/download/
-mkdir -p /home/cheungssh/web/cheungssh/download/
 echo "正在复制文件..."
 if [ `dirname $0` == "." ]
 then
@@ -47,8 +34,27 @@ else
 		echo "复制程序文件完成"
 	fi
 fi
+/bin/rm -fr  /home/cheungssh/web/cheungssh 2>/dev/null
+cd /home/cheungssh/web/  &&
+unzip  -o /home/cheungssh/web/cheungssh.zip
+if  [ $? -ne 0 ]
+then
+	echo  "解压失败"
+	exit
+fi
+mkdir -p /home/cheungssh/keyfile
+mkdir -p /home/cheungssh/scriptfile
+mkdir -p /home/cheungssh/crond
+mkdir -p /home/cheungssh/upload
+mkdir -p /home/cheungssh/download
+mkdir -p /home/cheungssh/conf
+mkdir -p /home/cheungssh/version
+mkdir -p /home/cheungssh/pid
+mkdir -p /home/cheungssh/logs
+mkdir -p /home/cheungssh/data
+mkdir -p /home/cheungssh/data/cmd/
+mkdir -p /home/cheungssh/web/cheungssh/download/
 chmod a+x -R /home/cheungssh/bin/
-echo  "正在复制..."
 cat <<EOFver|python
 #coding:utf-8
 import sys,time
@@ -73,8 +79,8 @@ wport=${wport:-1337}
 IP="$ip:$port"
 WIP="$ip:$wport"
 echo "正在配置.."
-sed -i  "s/112.74.205.171:800/$IP/g"   /home/cheungssh/web/cheungssh/cheungssh/cheungSSH.html        &&
-sed -i  "s/112.74.205.171:1337/$WIP/g" /home/cheungssh/web/cheungssh/cheungssh/cheungSSH.html     &&
+sed -i  "s/112.74.205.171:800/$IP/g"   /home/cheungssh/web/cheungssh/cheungssh.html        &&
+sed -i  "s/112.74.205.171:1337/$WIP/g" /home/cheungssh/web/cheungssh/cheungssh.html     &&
 sed -i  "s/1337/$wport/g" /home/cheungssh/bin/cheungssh-service.sh                                   &&
 sed -i  "s/1337/$wport/g" /home/cheungssh/bin/websocket_server_cheung.py                  
 if  [ $? -ne 0 ]
@@ -86,20 +92,37 @@ else
 fi
 
 ##
-echo  "请选择: (强烈建议您使用yum安装,本地软件包安装较为繁琐)"
+read -p  "强烈建议您使用yum安装,本地软件包安装极为繁琐 (Enter键继续) " haha
 read -p  '是否通过Yum网络安装软件包？(y/n) ' netinstall
 netinstall=${netinstall:-y}
 echo $netinstall|grep -iE '^n' -q
 if [ $? -ne 0 ]
 then
 	echo  "使用Yum安装..."
-	/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
 	yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip
 	if  [ $? -ne 0 ]
 	then
-		echo "安装失败,请检查网络"
-		exit 1
+		echo "安装失败,重试中...."
+		echo  "更新Yum...."
+		/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
+		yum clear all && yum makecache
+		echo  "重装yum..."
+		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip
+		if  [ $? -ne 0 ]
+		then
+			echo  "Yum安装又失败了"
+			exit 1
+		fi
 	else
+		if [ `rpm -qa|grep -Eo 'gcc|python-devel|openssl-devel|mysql-devel|swig|httpd|httpd-devel'|sort|uniq|wc -l` -lt 7 ]
+		then
+			echo  "更新Yum...."
+			/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
+			yum clear all && yum makecache
+			echo  "重装yum..."
+			yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip
+		fi
+		
 		which pip
 		if [ $? -ne 0 ]
 		then
@@ -140,7 +163,7 @@ then
 		pip install django-cors-headers   MySQL-python paramiko hashlib django-redis django-redis-cache  redis   pycrypto-on-pypi
 		if  [ $? -ne 0 ]
 		then
-			echo "安装失败"
+			echo "安装失败,如果错误信息是 time out 可能是您的网络不好导致的，请重试安装即可"
 			exit 1
 		else
 			echo "安装完毕"
@@ -341,16 +364,16 @@ EOF
 		fi
 		clear
 		
-		echo  -e "\n\t\t\t请使用谷歌浏览器登陆! 或者360的急速模式"
-		echo -e "\n\t安装CheungSSH完毕，请使用:\n\t默认用户名: cheungssh\n\t密码: cheungssh\n\t登录:http://$IP/cheungssh/"
+		echo  -e "\n\t\t\t强烈建议首选谷歌浏览器登陆! 其次360的极速模式 猎豹,否则不兼容"
+		echo -e "\n\t安装CheungSSH完毕，请使用:\n\t用户名:\tcheungssh\n\t密码:\tcheungssh\n\t登录:\thttp://$IP/cheungssh/"
 		echo  -e "\n\n启动CheungSSH服务命令:\n\t\t /home/cheungssh/bin/cheungssh-service.sh start"
 		###
 	fi
 	exit 
 	###############################################yum安装
 else
-	echo  "使用本地软件包安装..."
-	sleep 3
+	echo  "抱歉， 目前不支持本地安装，不过您可以查看CheungSSH yum所安装的包和pip安装的软件即可"
+	exit 1
 fi
 
 

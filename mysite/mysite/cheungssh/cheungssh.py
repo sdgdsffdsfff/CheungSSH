@@ -14,13 +14,13 @@ scriptfiledir="/home/cheungssh/scriptfile"
 reload(sys)
 sys.setdefaultencoding('utf8')
 from django.core.cache import cache
-from django.views.generic.base import View  #类视图
+from django.views.generic.base import View 
 import login_check
 import db_to_redis_allconf
 crond_file="/home/cheungssh/crond/crond_file"
 cmdfile="/home/cheungssh/data/cmd/cmdfile"
 def cheungssh_index(request):
-	return render_to_response("cheungssh/cheungSSH.html")
+	return render_to_response("cheungssh.html")
 def cheungssh_login(request):
 	info={"msgtype":"ERR","content":"","auth":"no"}
 	client_ip=request.META['REMOTE_ADDR']
@@ -78,7 +78,6 @@ def cheungssh_login(request):
         response["Access-Control-Allow-Methods"] = "POST"
         response["Access-Control-Allow-Credentials"] = "true"
         return response
-###############
 	info=json.dumps(info)
 	print info
 	return HttpResponse(info)
@@ -94,7 +93,6 @@ def cheungssh_logout(request):
 		backstr="%s(%s)"  % (callback,info)
 	return HttpResponse(backstr)
 def download_file(request):
-	#定义一个list，然后操作系统去tar
 	info={"msgtype":"ERR","content":""}
 	file=request.GET.get('file')
 	callback=request.GET.get('callback')
@@ -117,10 +115,8 @@ def download_file(request):
 	else:
 		info["msgtype"]='OK'
 		server_head=request.META['HTTP_HOST']
-		info["url"]="http://%s/download/%s" % (server_head,downfile)
+		info["url"]="http://%s/cheungssh/download/%s" % (server_head,downfile)
 		
-	#如果访问正确， 就返回msgtype=OK， 并且有一个URL值
-	#如果失败，则msgtype是ERRO，并且content是错误信息
 
 
 
@@ -131,7 +127,6 @@ def download_file(request):
 		backstr="%s(%s)"  % (callback,info)
 	return HttpResponse(backstr)
 
-	#return HttpResponse(info)
 	
 @login_check.login_check()
 def keyshow(request):
@@ -191,8 +186,6 @@ def delkey(request):
 def upload_file_test(request):
 	fid=str(random.randint(90000000000000000000,99999999999999999999))
 	info={"msgtype":"ERR","content":"","path":""}
-	#login_check_info=login_check.login_check()(request)
-	#if not login_check_info[0]:return HttpResponse(login_check_info[1])
 	upload_type=request.GET.get('upload_type')
 	username=request.user.username
 	if request.method=="POST":
@@ -202,7 +195,6 @@ def upload_file_test(request):
 		alllogline=cache.get('keyfilelog')
 		if not alllogline:
 			alllogline={}
-			#数据格式  alllogline   { "key的文件名" : {"文件对应的属性键值对":"filename"}     }
 		logline={}
 		if upload_type=='keyfile':
 			logline['time']=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
@@ -216,7 +208,7 @@ def upload_file_test(request):
 			logline['time']=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
 			logline['filename']=filename
 			logline['username']=username
-			scriptlogline=cache.get('scriptlogline')   #{fid:{文件属性:""}}
+			scriptlogline=cache.get('scriptlogline')   
 			if scriptlogline is None:scriptlogline={}
 			scriptlogline[filename]=logline
 			cache.set('scriptlogline',scriptlogline,36000000000000)
@@ -325,7 +317,6 @@ def configmodify(request):
 		if modify_type=="modify":
 			try:
 				t_allgroupall=cache.get('allconf')
-				#id=json.dumps(host['id'])
 				id=host['id']
 				if t_allgroupall:
 					for b in host.keys():
@@ -375,7 +366,6 @@ def configmodify(request):
 							break
 				cache.set('allconf',t_allgroupall,360000000000)
 			except KeyError:
-				#info['content']="服务器不存在该配置"
 				info['msgtype']='OK'
 
 			except Exception,e:
@@ -439,7 +429,6 @@ def crontab(request):
 			if not type({})==type(value):
 				info['content']="数据类型错误"
 			else:
-				#value  :   fid,sfile,dfile,id,runtime,status,user
 				fid=str(random.randint(90000000000000000000,99999999999999999999)) 
 				lasttime=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())
 				value['fid']=fid
@@ -451,13 +440,11 @@ def crontab(request):
 				value['runtype']=runtype
 				value['createtime']=str(time.strftime('%Y-%m-%d %H:%M:%S',time.localtime()))	
 				value_to_log={}
-				#value_to_log[value['fid']]=value
 				value_tmp=json.dumps(value)
 				if runtype=="upload" or runtype=="download":
 					value_to_log[value['fid']]=value
 					runmodel_program=os.path.join(runmodel,"daemon_FileTransfer.py")
 					cmd="""%s  %s '%s' #%s""" % (runtime,runmodel_program,value_tmp,value['fid'])
-					#该功能是前端访问两次， 生成了两次命令
 					a=open(crond_file,'a')
 					a.write(cmd+"\n")
 					a.close()
@@ -475,27 +462,22 @@ def crontab(request):
 						hostinfo=eval(hostinfo)
 						value['cmd']=hostinfo['cmd']
 						value_to_log[value['fid']]=value
-						#命令 服务器 fid
-						cmdcontent= "\n%s#%s#%s\n"  %(hostinfo['cmd'],hostinfo['id'],value['fid']) ### cmd # selectserver # fid  
+						cmdcontent= "\n%s#%s#%s\n"  %(hostinfo['cmd'],hostinfo['id'],value['fid'])
 						try:
 							with open(cmdfile,'a') as f:
-								f.write(cmdcontent) #写入命令记录文件
-							#定义加载到crond文件中的格式: 时间 程序文件 fid
+								f.write(cmdcontent) 
 							crondcmd=""" %s %s %s\n"""  % (runtime,'/home/cheungssh/bin/cheungssh_web.py',fid)
 							try:
-								#写入crond文件
 								with open(crond_file,'a') as f:
 									f.write(crondcmd)
 							
-								#加载到计划任务中
 								crond_write=commands.getstatusoutput("""/usr/bin/crontab %s""" % (crond_file))
 								if int(crond_write[0])==0:
 									info['msgtype']='OK'
-									crond_record.crond_record(value_to_log) #写入redis日志记录
+									crond_record.crond_record(value_to_log) 
 								else:
 									print "加入计划任务失败",crond_write[1],crond_write[0]
 									info['content']=crond_write[1]
-								#########
 							except Exception,e:
 								info['content']=str(e)
 						except Exception,e:
@@ -551,7 +533,7 @@ def excutecmd(request):
 		info['msgtype']="OK"
 	except Exception,e:
 		info['content']=str(e)
-	try:#写下记录
+	try:
 		allconf=cache.get('allconf')
 		allconf_t=allconf['content']
 		server_ip_all=[]
@@ -633,12 +615,10 @@ def excutes_script(request):
 		backstr="%s(%s)"  % (callback,info)
 @login_check.login_check()
 def get_script(request):
-	fid=str(random.randint(90000000000000000000,99999999999999999999))   #这个是fileid
+	fid=str(random.randint(90000000000000000000,99999999999999999999))  
 	info={'msgtype':'ERR','content':[]}
 	callback=request.GET.get('callback')
 	edit_type=request.GET.get('edit_type')
-	#login_check_info=login_check.login_check()(request)
-	#if not login_check_info[0]:return HttpResponse(login_check_info[1])
 	username=request.user.username
 	uploadtime=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time())) 
 	try:
@@ -658,7 +638,7 @@ def get_script(request):
 			if scriptlogline:
 				info['content']=scriptlogline.values()
 			info['msgtype']='OK'
-		elif edit_type=='add': #是scriptlogline {filename :  {文件属性}}
+		elif edit_type=='add':
 			try:
 				scriptfilecontent=request.POST.get('filecontent')
 				filename=request.POST.get('filename')
@@ -669,7 +649,7 @@ def get_script(request):
 				logline['time']=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
 				logline['filename']=filename
 				logline['username']=username
-				scriptlogline=cache.get('scriptlogline')   #{fid:{文件属性:""}}
+				scriptlogline=cache.get('scriptlogline')  
 				if scriptlogline is None:scriptlogline={}
                         	scriptlogline[filename]=logline
                         	cache.set('scriptlogline',scriptlogline,36000000000000)
@@ -678,12 +658,12 @@ def get_script(request):
 			except Exception,e:
 				info['content']=str(e)
 		elif edit_type=='delete':
-			filenames=request.GET.get('filenames') # 这是一个[]
-			scriptlogline=cache.get('scriptlogline')   #{fid:{文件属性:""}}
+			filenames=request.GET.get('filenames') 
+			scriptlogline=cache.get('scriptlogline')  
 			if scriptlogline:
 				for filename in  scriptlogline:
 					try:
-						del scriptlogline[filename] #只删除记录
+						del scriptlogline[filename]
 					except KeyError:
 						pass
 					except Exception,e:
@@ -697,14 +677,10 @@ def get_script(request):
 	except Exception,e:
 		print e,'错误'
 		info['content']=str(e)
-	#info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
 	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
 	if callback:
 		try:
-			#info=eval(info)  #中文乱码，如果没有，则报错,是指特殊字符报错
-			print 111111111111111111
 			backstr="%s(%s)" % (callback,info)
-			print 222222222222
 		except Exception,e:
 			info['content']=str(e)
 			print '错误',e

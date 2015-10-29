@@ -79,13 +79,9 @@ def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data)
 		info=json.dumps(info,encoding='utf8',ensure_ascii=False)
 	else:
 		ssh.close()
-	#sendinfo.sendinfo(str({ie_key:info}))
-	######### 硬件检测
 	if Data.excutetype=='cmd':
 		sendinfo.sendinfo(str({ie_key:info}))
 	elif Data.excutetype=='crontab':
-		# logline的数据格式是 key ：['status', 'runtime', 'user', 'fid', 'runtype', 'ip', 'cmd', 'id', 'createtime']
-		#计划任务命令存储数据格式: { fid :  {}  }
 		crondlog_show=cache.get('crondlog')
 		if  crondlog_show:
 			lasttime=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
@@ -113,7 +109,6 @@ def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data)
 		hwinfo[ip][Data.hwtype]=ResultSum
 		hwinfo[ip]['checktime']=checktime
 		cache.set('hwinfo',hwinfo,864000000)
-	#########
 def main(cmd,ie_key,selectserver,Data,excutetype='cmd',hwtype='CPU'):
 	Data.excutetype=excutetype
 	Data.hwtype=hwtype
@@ -156,7 +151,7 @@ if __name__=='__main__':
 	for a in fcontent:
 		cmdline=a.strip().split('#')
 		if cmdline[-1]==fid:
-			cmd ="#".join(cmdline[0:-2])  #命令 服务器 fid 
+			cmd ="#".join(cmdline[0:-2]) 
 			selectserver=cmdline[-2]
 			fcontent.close()
 			break

@@ -15,7 +15,7 @@ angular.module('cheungSSH').controller('keyfileMgrCtr', ['$scope', '$stateParams
                 ]
             };
 
-            resource.JsonPRequest(globalUrl+"/cheungssh/keyadmin/").then(function (data) {
+            resource.query(globalUrl+"/cheungssh/keyadmin/").then(function (data) {
                 $scope.keyfileList.data = data.content;
             });
 
@@ -62,7 +62,7 @@ angular.module('cheungSSH').controller('keyfileMgrCtr', ['$scope', '$stateParams
             }
 
             $scope.delKeyFile = function (entity) {
-                resource.JsonPRequest(globalUrl+"/cheungssh/delkey/?fid=" + entity.fid).then(function (data) {
+                resource.query(globalUrl+"/cheungssh/delkey/?fid=" + entity.fid).then(function (data) {
                     if (data.msgtype === "OK") {
                         $scope.keyfileList.data = utils.removeFromArrayByKeyValue($scope.keyfileList.data, 'fid', entity.fid);
                     } else {

@@ -2,7 +2,7 @@ angular.module('cheungSSH').controller('homeCtr', ['$scope', '$rootScope', '$sta
     $rootScope.homeScope = $scope;
     $scope.serverInfoList = allServers;
     $.each($scope.serverInfoList, function (key, server) {
-        resource.JsonPRequest(globalUrl + '/cheungssh/sshcheck/?id=' + server.id).then(function (resp) {
+        resource.query(globalUrl + '/cheungssh/sshcheck/?id=' + server.id).then(function (resp) {
             server.status = resp.status;
             server.content = resp.content;
         })
@@ -11,7 +11,7 @@ angular.module('cheungSSH').controller('homeCtr', ['$scope', '$rootScope', '$sta
     $interval(function () {
         $.each($scope.serverInfoList, function (key, server) {
             if (server.type == 'modify')
-                resource.JsonPRequest(globalUrl + '/cheungssh/sshcheck/?id=' + server.id).then(function (resp) {
+                resource.query(globalUrl + '/cheungssh/sshcheck/?id=' + server.id).then(function (resp) {
                     server.status = resp.status;
                     server.content = resp.content;
                 })
@@ -126,7 +126,7 @@ angular.module('cheungSSH').controller('homeCtr', ['$scope', '$rootScope', '$sta
     }
 
     $scope.$on('createSchedule', function (event, type, data, scheduleData) {
-        resource.JsonPRequest(globalUrl + "/cheungssh/crontab/?type=" + type + "&value=" +
+        resource.query(globalUrl + "/cheungssh/crontab/?type=" + type + "&value=" +
             JSON.stringify(data) + "&runtime=" + scheduleData).then(function (data) {
             if (data.msgtype.toLowerCase() != 'ok') {
                 $alert(data.content);
@@ -147,14 +147,14 @@ angular.module('cheungSSH').controller('homeCtr', ['$scope', '$rootScope', '$sta
             html: true,
             title: '捐助',
             content: '<div class="clearfix"><p>&nbsp;&nbsp;&nbsp;&nbsp;我们的开发团队历经一个国庆，对Web系统的开发持续了84个小时，不分昼夜持续开发本系统。如果您觉得CheungSSH真的对贵司或者您个人的运维管理工作有帮助，我们是非常欣慰的，总算做了一点公益事业。为了能让我们有更强大并且持续的创新动力，我们还是希望能得到您（贵司）的捐助，以下是我们的捐助信息：</p><img style="width:150px;height:150px;float:left;margin-left:25px;" src="../static/img/donate.png"><div style="margin: 50px 0 0 200px;"><h4>收款人：张其川</h4><h4>支付宝账号: kc-c@qq.com</h4></div></div>'
-//            contentTemplate: '../static/template/modal/modal.donate.tpl.html'
+//            contentTemplate: 'static/template/modal/modal.donate.tpl.html'
         });
     }
 
     $scope.loginOut = function () {
         $modal({
             callback: function (element, msg) {
-                resource.JsonPRequest(globalUrl + "/cheungssh/logout/").then(function (data) {
+                resource.query(globalUrl + "/cheungssh/logout/").then(function (data) {
                     if (data.msgtype.toLowerCase() == 'ok') {
                         $state.go("login");
                     }

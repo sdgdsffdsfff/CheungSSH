@@ -66,11 +66,11 @@ angular.module('cheungSSH').controller('serverListCtr', ['$scope', '$stateParams
                                         data[key] = rowEntity[key];
                                     }
                                 }
-                                resource.JsonPRequest(globalUrl + "/cheungssh/configmodify/?type=modify&host=" + JSON.stringify(data))
+                                resource.query(globalUrl + "/cheungssh/configmodify/?type=modify&host=" + JSON.stringify(data))
                                     .then(function (data) {
                                         if (data.msgtype.toLowerCase() === "ok") {
                                             $alert("修改成功");
-                                            resource.JsonPRequest(globalUrl+'/cheungssh/sshcheck/?id='+rowEntity.id).then(function(resp){
+                                            resource.query(globalUrl+'/cheungssh/sshcheck/?id='+rowEntity.id).then(function(resp){
                                                 rowEntity.status = resp.status;
                                                 rowEntity.content = resp.content;
                                             })
@@ -92,12 +92,12 @@ angular.module('cheungSSH').controller('serverListCtr', ['$scope', '$stateParams
                                         return false;
                                     }
                                 })
-                                isValidated && resource.JsonPRequest(globalUrl + "/cheungssh/configmodify/?type=add&host=" + JSON.stringify(rowEntity))
+                                isValidated && resource.query(globalUrl + "/cheungssh/configmodify/?type=add&host=" + JSON.stringify(rowEntity))
                                     .then(function (data) {
                                         $alert("新增服务器成功");
                                         rowEntity.id = data.id;
                                         rowEntity.type = "modify";
-                                        resource.JsonPRequest(globalUrl+'/cheungssh/sshcheck/?id='+rowEntity.id).then(function(resp){
+                                        resource.query(globalUrl+'/cheungssh/sshcheck/?id='+rowEntity.id).then(function(resp){
                                             rowEntity.status = resp.status;
                                             rowEntity.content = resp.content;
                                         })
@@ -195,7 +195,7 @@ angular.module('cheungSSH').controller('serverListCtr', ['$scope', '$stateParams
                     }, cellEditableCondition: function ($scope) {
                         return $scope.grid.getCellValue($scope.row, $scope.grid.getColumn(columnHead['su'])) === 'Y';
                     }},
-                    { name: '状态', field: 'status', allowCellFocus:false,enableCellEdit:false,cellTemplate:'<div class="ui-grid-cell-contents serverInit" ng-class="{\'OK\':\'serverConnected\',\'ERR\':\'serverDisconnected\'}[grid.getCellValue(row, col)]" data-content-Template="../static/template/popover/serverStatus.html" data-container="body" data-html="true" data-trigger="hover" data-placement="top" data-delay="200" data-hover-hold="true" bs-popover></div>'}
+                    { name: '状态', field: 'status', allowCellFocus:false,enableCellEdit:false,cellTemplate:'<div class="ui-grid-cell-contents serverInit" ng-class="{\'OK\':\'serverConnected\',\'ERR\':\'serverDisconnected\'}[grid.getCellValue(row, col)]" data-content-Template="static/template/popover/serverStatus.html" data-container="body" data-html="true" data-trigger="hover" data-placement="top" data-delay="200" data-hover-hold="true" bs-popover></div>'}
                 ]
             };
 
@@ -223,17 +223,25 @@ angular.module('cheungSSH').controller('serverListCtr', ['$scope', '$stateParams
                 var deleteItems = JSON.stringify($.map(selectedRows, function (item) {
                     return item.id;
                 }));
-                resource.JsonPRequest(globalUrl + "/cheungssh/configmodify/?type=del&host=" + deleteItems).then(function (data) {
+                resource.query(globalUrl + "/cheungssh/configmodify/?type=del&host=" + deleteItems).then(function (data) {
                     if (data.msgtype.toLowerCase() === "ok") {
                         $alert("删除成功");
                         $.each(selectedRows, function (key, item) {
-                            $scope.serverList.data = utils.removeFromArrayByKeyValue($scope.serverList.data, "id", item.id);
+                            $scope.$parent.serverInfoList = $scope.serverList.data = utils.removeFromArrayByKeyValue($scope.serverList.data, "id", item.id);
                         });
                     } else {
                         $alert("删除失败");
                     }
                 })
             };
+
+            $.each($scope.serverInfoList, function (key, server) {
+		if(server.type == 'modify')
+                resource.query(globalUrl + '/cheungssh/sshcheck/?id=' + server.id).then(function (resp) {
+                    server.status = resp.status;
+                    server.content = resp.content;
+                })
+            });
 
         }]
 ).filter('loginMethodFilter', function () {

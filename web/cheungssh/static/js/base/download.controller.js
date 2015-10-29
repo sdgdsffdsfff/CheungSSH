@@ -3,7 +3,7 @@ angular.module('cheungSSH').controller('downloadCtr',['$scope', '$stateParams', 
 
             $scope.groupServerList = [];
 
-            resource.JsonPRequest(globalUrl + "/cheungssh/groupinfo/").then(function (data) {
+            resource.query(globalUrl + "/cheungssh/groupinfo/").then(function (data) {
 
                 $scope.groupServerTree = $.map(data.content, function (value, key) {
                     var items = $.grep($scope.serverInfoList, function (item, key) {
@@ -59,7 +59,7 @@ angular.module('cheungSSH').controller('downloadCtr',['$scope', '$stateParams', 
             });*/
 
             $scope.getPaths = function(value){
-                return resource.JsonPRequest(globalUrl+"/cheungssh/pathsearch/?path="+value).then(function(data){
+                return resource.query(globalUrl+"/cheungssh/pathsearch/?path="+value).then(function(data){
                     return data.content;
                 })
             };
@@ -96,7 +96,7 @@ angular.module('cheungSSH').controller('downloadCtr',['$scope', '$stateParams', 
                     if(item.selected){
                         item.downloadComplete = false;
                         downloadingCount++;
-                        resource.JsonPRequest(globalUrl+"/cheungssh/filetrans/?action=download&host="+JSON.stringify({
+                        resource.query(globalUrl+"/cheungssh/filetrans/?action=download&host="+JSON.stringify({
                             sfile:item.sourceFile,
                             dfile:item.destFile,
                             id:item.id
@@ -109,7 +109,7 @@ angular.module('cheungSSH').controller('downloadCtr',['$scope', '$stateParams', 
                                 });
                                 $("#progressBar_"+key).parent().siblings().css("display","none");
                                 t = setInterval(function(){
-                                    resource.JsonPRequest(globalUrl+"/cheungssh/progres/?fid=" + data.fid).then(function(data){
+                                    resource.query(globalUrl+"/cheungssh/progres/?fid=" + data.fid).then(function(data){
                                         if(data.status.toLowerCase() === "err"){
                                             downloadingCount--;
                                             item.errorMsg = data.content;
@@ -219,7 +219,7 @@ angular.module('cheungSSH').controller('downloadCtr',['$scope', '$stateParams', 
                     var files = $.map($scope.gridApi.selection.getSelectedRows(),function(item,key){
                             return item.sourceFile;
                     });
-                    resource.JsonPRequest(globalUrl+"/cheungssh/download/?file="+JSON.stringify(files)+"&callback=123").then(function(data){
+                    resource.query(globalUrl+"/cheungssh/download/?file="+JSON.stringify(files)+"&callback=123").then(function(data){
                         window.open(data.url);
                     });
                     },
@@ -229,8 +229,8 @@ angular.module('cheungSSH').controller('downloadCtr',['$scope', '$stateParams', 
                     scope:$scope,
                     html: true,
                     title: '下载文件到本地',
-                    template: '../static/template/modal/modal.confirm.download.html',
-                    contentTemplate: '../static/template/modal/download.local.tpl.html'
+                    template: 'static/template/modal/modal.confirm.download.html',
+                    contentTemplate: 'static/template/modal/download.local.tpl.html'
                 }).$promise.then(function(){
                         $timeout(function(){
                             $scope.gridApi.selection.selectAllRows();
@@ -248,7 +248,7 @@ angular.module('cheungSSH').controller('downloadCtr',['$scope', '$stateParams', 
                                     return item.sourceFile;
                                 });
 
-                                resource.JsonPRequest(globalUrl+"/cheungssh/download/?file="+JSON.stringify(files)+"&callback=123").then(function(data){
+                                resource.query(globalUrl+"/cheungssh/download/?file="+JSON.stringify(files)+"&callback=123").then(function(data){
                                     window.open(data.url);
                                 });
                             }
@@ -289,7 +289,7 @@ angular.module('cheungSSH').controller('downloadCtr',['$scope', '$stateParams', 
                         html: true,
                         title: '请确认时间',
                         template: 'modal/modal.confirm.tpl.html',
-                        contentTemplate: "../static/template/modal/schedule.confirm.html"
+                        contentTemplate: "static/template/modal/schedule.confirm.html"
                     });
                 },
                     cancelCallback: function () {
@@ -299,7 +299,7 @@ angular.module('cheungSSH').controller('downloadCtr',['$scope', '$stateParams', 
                     html: true,
                     title: '计划任务',
                     template: 'modal/modal.confirm.tpl.html',
-                    contentTemplate: '../static/template/modal/schedule.setup.tpl.html'
+                    contentTemplate: 'static/template/modal/schedule.setup.tpl.html'
                 });
             }
 

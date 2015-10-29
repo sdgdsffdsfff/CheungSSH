@@ -60,7 +60,7 @@ angular.module('cheungSSH').controller('scriptCtr', ['$scope', '$stateParams', '
             }
 
             $scope.delKeyFile = function (entity) {
-                resource.JsonPRequest(globalUrl + "/cheungssh/delkey/?fid=" + entity.fid).then(function (data) {
+                resource.query(globalUrl + "/cheungssh/delkey/?fid=" + entity.fid).then(function (data) {
                     if (data.msgtype === "OK") {
                         $scope.scriptList.data = utils.removeFromArrayByKeyValue($scope.scriptList.data, 'fid', entity.fid);
                     } else {
@@ -76,7 +76,7 @@ angular.module('cheungSSH').controller('scriptCtr', ['$scope', '$stateParams', '
             $scope.editScriptFile = function (item) {
                 $scope.type = 'modify';
                 $scope.scriptName = item.filename;
-                resource.JsonPRequest(globalUrl + '/cheungssh/script/?edit_type=show&filename=' + item.filename).then(function (data) {
+                resource.query(globalUrl + '/cheungssh/script/?edit_type=show&filename=' + item.filename).then(function (data) {
                     if (data.msgtype.toLowerCase() == 'ok') {
                         $scope.scriptContent = data.content;
                         $scope.editScript();
@@ -97,8 +97,8 @@ angular.module('cheungSSH').controller('scriptCtr', ['$scope', '$stateParams', '
                     scope: $scope,
                     html: true,
                     title: '上传脚本文件',
-                    template: '../static/template/modal/modal.confirm.upload.html',
-                    contentTemplate: '../static/template/modal/upload.tpl.html'
+                    template: 'static/template/modal/modal.confirm.upload.html',
+                    contentTemplate: 'static/template/modal/upload.tpl.html'
                 });
             }
 
@@ -112,8 +112,8 @@ angular.module('cheungSSH').controller('scriptCtr', ['$scope', '$stateParams', '
                     scope: $scope,
                     html: true,
                     title: '上传脚本文件',
-                    template: '../static/template/modal/modal.confirm.upload.html',
-                    contentTemplate: '../static/template/modal/script.edit.html'
+                    template: 'static/template/modal/modal.confirm.upload.html',
+                    contentTemplate: 'static/template/modal/script.edit.html'
                 });
             }
 
@@ -144,7 +144,7 @@ angular.module('cheungSSH').controller('scriptCtr', ['$scope', '$stateParams', '
 
             }
 
-            resource.JsonPRequest(globalUrl + "/cheungssh/script/?edit_type=list").then(function (data) {
+            resource.query(globalUrl + "/cheungssh/script/?edit_type=list").then(function (data) {
                 $scope.scriptList.data = data.content;
             });
         }]

@@ -16,7 +16,7 @@ angular.module('cheungSSH').controller('visitHisCtr', ['$scope', '$stateParams',
                 ]
             };
 
-            resource.JsonPRequest(globalUrl + "/cheungssh/operationrecord/").then(function (data) {
+            resource.query(globalUrl + "/cheungssh/operationrecord/").then(function (data) {
                 $scope.visitHisList.data = data.content;
             });
         }]

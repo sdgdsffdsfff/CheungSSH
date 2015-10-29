@@ -16,8 +16,7 @@ def db_to_redis(id):
 			"port":a.Port,
 			"username":a.Username,
 			"password":a.Password,
-			#"keyfile":a.KeyFile.path,  #这个是文件控件， 要用path访问，否则报错
-			"keyfile":a.KeyFile,  #这个是文件控件， 要用path访问，否则报错
+			"keyfile":a.KeyFile, 
 			"sudo":a.Sudo,
 			"sudopassword":a.SudoPassword,
 			"su":a.Su,
@@ -29,7 +28,6 @@ def db_to_redis(id):
 			return t_host
 		except Exception,e:
 			return False
-	#"no-id"
 	return False
 	
 	

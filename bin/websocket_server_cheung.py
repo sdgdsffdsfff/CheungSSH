@@ -78,13 +78,11 @@ def parse_data(msg,ie_key):
 	raw_str_source=eval(raw_str)
 	raw_str=raw_str_source["cmd"]
 	selectserver=raw_str_source["selectserver"]
-	#print "主机: ",selectserver
 
     except Exception,e:
 	print "命令格式错误",e
 	sys.exit(1)
 	
-    print "已经不再接收浏览器的输入"
     return False
 
 
@@ -255,20 +253,11 @@ class WebSocket(threading.Thread):#继承Thread
 
                     self.conn.send(str.encode(str(handshake)))
                     self.handshaken = True  
-                    #print ('Socket %s Handshaken with %s success!' %(self.index, self.remote))  
-                    #sendMessage(u'Welcome, ' + self.name + ' !')  #像浏览器发送消息
-                    #sendMessage(unicode("欢迎使用CheungSSH Web版本! QQ:2418731289").encode('utf-8'))  #像浏览器发送消息
-                    #os.system("python %s/cheung/bin/get_info.py"%HOME)
-                    #print first_info,555555555555
-                    #sendMessage(unicode("""<script type="text/javascript">alert("欢迎使用CheungSSH Web版本! QQ:2418731289")</script>""").encode('utf-8'))  #像浏览器发送消息
                     i=1
-                    #print self.buffer_utf8
-                    sendMessage("""{"%s":{"content": [{"servers": [{"info": "%s"}]}], "msgtype": "token", "id": "%s"}}"""  % (self.ie_key,self.ie_key,self.ie_key))  #像浏览器发送消息
+                    sendMessage("""{"%s":{"content": [{"servers": [{"info": "%s"}]}], "msgtype": "token", "id": "%s"}}"""  % (self.ie_key,self.ie_key,self.ie_key)) 
                     self.buffer_utf8 = ""
                     g_code_length = 0                    
 		else:
-			#info=json.dumps(info,encoding='utf8',ensure_ascii=False)
-			#info=str(info)
 			T=sendMessage(info)
 			if T=='Error':
 				print "断开接收通道"
@@ -290,7 +279,7 @@ class WebSocket(threading.Thread):#继承Thread
                     continue
                 if g_code_length == 0:
                     get_datalength(mm)
-                #接受的长度
+               
                 self.length_buffer = self.length_buffer + len(mm)
                 self.buffer = self.buffer + mm
                 if self.length_buffer - g_header_length < g_code_length :
@@ -299,19 +288,11 @@ class WebSocket(threading.Thread):#继承Thread
                     self.buffer_utf8 = parse_data(self.buffer,self.ie_key) #utf8                
                     msg_unicode = str(self.buffer_utf8).decode('utf-8', 'ignore') #unicode
                     if msg_unicode=='quit':
-                        #print (u'Socket%s Logout!' % (self.index))
                         nowTime = time.strftime('%H:%M:%S',time.localtime(time.time()))
-                        #sendMessage(u'%s %s say: %s' % (nowTime, self.remote, self.name+' Logout'))                      
-                        #sendMessage(u'AAA')                 
-                        #deleteconnection(str(self.index))
                         self.conn.close()
                         break #退出线程
                     else:
-                        #print (u'Socket%s Got msg:%s from %s!' % (self.index, msg_unicode, self.remote))
                         nowTime = time.strftime(u'%H:%M:%S',time.localtime(time.time()))
-                        #sendMessage(u'%s %s say: %s' % (nowTime, self.remote, msg_unicode))  
-                        #sendMessage(u'Starting')                 
-                    #重置buffer和bufferlength
                     self.buffer_utf8 = ""
                     self.buffer = ""
                     g_code_length = 0

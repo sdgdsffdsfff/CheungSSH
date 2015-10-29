@@ -17,7 +17,7 @@ angular.module('cheungSSH').controller('cmdHisCtr', ['$scope', '$stateParams', '
                 ]
             };
 
-            resource.JsonPRequest(globalUrl + "/cheungssh/cmdhistory/").then(function (data) {
+            resource.query(globalUrl + "/cheungssh/cmdhistory/").then(function (data) {
                 $.each(data.content, function (key, item) {
                     item.servers = item.servers.join(",");
                 });

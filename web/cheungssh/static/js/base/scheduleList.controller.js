@@ -23,7 +23,7 @@ angular.module('cheungSSH').controller('scheduleListCtr',['$scope', '$stateParam
             };
 
             $scope.removeSchedule = function(entity){
-                resource.JsonPRequest(globalUrl+"/cheungssh/delcrondlog/?fid="+entity.fid).then(function(data){
+                resource.query(globalUrl+"/cheungssh/delcrondlog/?fid="+entity.fid).then(function(data){
                     if(data.msgtype === "OK"){
                         $scope.scheduleList.data = utils.removeFromArrayByKeyValue($scope.scheduleList.data,'fid',entity.fid);
                     }else{
@@ -69,7 +69,7 @@ angular.module('cheungSSH').controller('scheduleListCtr',['$scope', '$stateParam
                 });
             };
 
-            resource.JsonPRequest(globalUrl+"/cheungssh/showcrondlog/").then(function(data){
+            resource.query(globalUrl+"/cheungssh/showcrondlog/").then(function(data){
                 $scope.scheduleList.data = data.content;
             });
 

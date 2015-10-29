@@ -18,9 +18,7 @@ CACHES = {
         },
     },
 }
-SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'  #这个增加session数据到redis中，redis在验证的时候， 就不会到数据库中拿去数据了，这个是可行的,只需要开启这一项配置就可以了,cache_db的意思是写入到缓存，如果没有cache_db那就不会写入到缓存
-#SESSION_CACHE_ALIAS = "default"
-#以上需要安装  pip install django-redis-sessions
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db' 
 
 
 
@@ -84,7 +82,6 @@ STATIC_ROOT = ''
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-############js，img等等静态文件配置
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
@@ -160,12 +157,11 @@ INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-	'corsheaders', ####
     #'django.contrib.sites',
     #'mysite.books',
     'mysite.cheungssh',
  	 'django.contrib.comments',
-	'django.contrib.sites',   #用来添加django自带的评论中心模板
+	'django.contrib.sites', 
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:

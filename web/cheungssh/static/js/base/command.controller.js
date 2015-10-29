@@ -3,7 +3,7 @@ angular.module('cheungSSH').controller('commandCtr', ['$scope', '$stateParams', 
 
         $scope.groupServerList = [];
 
-        resource.JsonPRequest(globalUrl + "/cheungssh/groupinfo/").then(function (data) {
+        resource.query(globalUrl + "/cheungssh/groupinfo/").then(function (data) {
             $scope.groupServerTree = $.map(data.content, function (value, key) {
                 var items = $.grep($scope.serverInfoList, function (item, key) {
                     return item.group === value;
@@ -76,12 +76,12 @@ angular.module('cheungSSH').controller('commandCtr', ['$scope', '$stateParams', 
                 scope: $scope,
                 html: true,
                 title: '选择服务器',
-                contentTemplate: '../static/template/modal/modal.chooseservers.tpl.html'
+                contentTemplate: 'static/template/modal/modal.chooseservers.tpl.html'
             });
         };
 
         $scope.getPaths = function (value) {
-            return resource.JsonPRequest(globalUrl+"/cheungssh/pathsearch/?path=" + value).then(function (data) {
+            return resource.query(globalUrl+"/cheungssh/pathsearch/?path=" + value).then(function (data) {
                 return data.content;
             })
         }
@@ -227,7 +227,7 @@ angular.module('cheungSSH').controller('commandCtr', ['$scope', '$stateParams', 
                 cmd: $scope.commandPath
             })
 
-            resource.JsonPRequest(globalUrl + "/cheungssh/excutecmd/?cmd="+data+"&rid="+$scope.RID).then(function(resp){
+            resource.query(globalUrl + "/cheungssh/excutecmd/?cmd="+data+"&rid="+$scope.RID).then(function(resp){
                 $("#realTimeContent").append('<div style="height:500px;"></div>');
             })
         }
@@ -288,7 +288,7 @@ angular.module('cheungSSH').controller('commandCtr', ['$scope', '$stateParams', 
                     html: true,
                     title: '请确认时间',
                     template: 'modal/modal.confirm.tpl.html',
-                    contentTemplate: "../static/template/modal/schedule.confirm.html"
+                    contentTemplate: "static/template/modal/schedule.confirm.html"
                 });
             },
                 cancelCallback: function () {
@@ -298,7 +298,7 @@ angular.module('cheungSSH').controller('commandCtr', ['$scope', '$stateParams', 
                 html: true,
                 title: '计划任务',
                 template: 'modal/modal.confirm.tpl.html',
-                contentTemplate: '../static/template/modal/schedule.setup.tpl.html'
+                contentTemplate: 'static/template/modal/schedule.setup.tpl.html'
             });
 
         }

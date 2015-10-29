@@ -28,7 +28,7 @@ angular.module('cheungSSH').controller('transferLogCtr',['$scope', '$stateParams
                     { name: "文件大小",field:'size' }
                 ]
             };
-            resource.JsonPRequest(globalUrl+"/cheungssh/translog/").then(function(data){
+            resource.query(globalUrl+"/cheungssh/translog/").then(function(data){
                 $scope.transferLogList.data = data.content;
             });
         }]

@@ -2,7 +2,6 @@
 #coding:utf8
 import paramiko,os,re,sys,error_linenumber,threading,functools,json
 import db_to_redis,time,socket,key_resolv
-#socket.setdefaulttimeout(3)
 from cheunglog import log
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 sys.path.append('/home/cheungssh/mysite')
@@ -20,7 +19,6 @@ def set_progres(fid,transferred, toBeTransferred):
 	progres="%0.2f" % (float(nowsize)/float(allsize)*100)
 	if progres=="100.00":info["msgtype"]="OK"
 	info["progres"]=progres
-	#info=json.dumps(info)
 	try:
 		cache.set("info:%s"%(fid),info,600)
 		cache.set(cache_size_id,allsize,360000000)
@@ -160,7 +158,6 @@ def UploadFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopass
 		t.close()
 def resove_conf(conf,fid,user,action):
 	print conf,99999999999999999999999999999999999999999999999999999999,"开始解析"
-	#conf= {}
 	model="transfile_getfile_resove_conf"
 	info={"msgtype":"ERR","content":""}
 	try:
@@ -208,7 +205,6 @@ def resove_conf(conf,fid,user,action):
 	b.start()
 def getconf(host,fid,user,action):
 	model="getconf"
-	#host is {}
 	try:
 		if not type({})==type(host):
 			host=eval(host)
@@ -220,7 +216,6 @@ def getconf(host,fid,user,action):
 		print "有错误",e
 		return False
 	try:
-		#db get info is {}
 		try:
 			hostconf=cache.get('allconf')
 		except Exception,e:

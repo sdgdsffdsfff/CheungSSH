@@ -84,7 +84,6 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 	info['id']=(str(random.randint(999999999,99999999999999999)))
 	info=json.dumps(info,encoding='utf8',ensure_ascii=False)
-	#sendinfo.sendinfo(str({ie_key:info}))
 	if Data.excutetype=='cmd':
 		sendinfo.sendinfo(str({ie_key:info}))
 	else:
@@ -95,7 +94,6 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 			ipinfo={Data.hwtype:ResultSum,'ip':ip,'checktime':checktime}
 			hwinfo[ip]=ipinfo
 		else:
-			#hwinfo[ip][Data.hwtype]=ResultSum
 			if hwinfo.has_key(ip):
 				hwinfo[ip][Data.hwtype]=ResultSum
 			else:

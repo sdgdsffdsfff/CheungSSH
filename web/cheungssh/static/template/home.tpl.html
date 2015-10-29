@@ -9,7 +9,7 @@
     <div class="cheung-leftbar" ng-scrollbar scrollbar-x="false" scrollbar-y="true" scrollbar-config="{autoResize:true,show:true}">
         <ul class="leftBarMenu">
             <li ng-repeat="menu in menus" class="repeat">
-                <div id="feature_{{menu.id}}" ng-click="menuClick(menu);" wave-effect ng-class="{true:'active'}[menu.active]" class="menuItem">{{menu.name}}<img ng-if="menu.hasChildren||menu.children" ng-src="../static/hardware/svg/ic_keyboard_arrow_{{menu.collapse?'down':'left'}}_24px.svg"></div>
+                <div id="feature_{{menu.id}}" ng-click="menuClick(menu);" wave-effect ng-class="{true:'active'}[menu.active]" class="menuItem">{{menu.name}}<img ng-if="menu.hasChildren||menu.children" ng-src="static/svg/ic_keyboard_arrow_{{menu.collapse?'down':'left'}}_24px.svg"></div>
                 <div id="feature_{{child.id}}" ng-click="menuClick(child);" ng-class="{true:'active'}[child.active]" ng-repeat="child in menu.children" ng-if="menu.collapse" class="menuItemChild repeat" wave-effect>
                         &nbsp;&nbsp;&nbsp;&nbsp;{{child.name}}
                 </div>
