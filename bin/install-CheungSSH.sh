@@ -107,7 +107,7 @@ then
 		/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
 		yum clear all && yum makecache
 		echo  "重装yum..."
-		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel
+		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel --skip-broken
 		if  [ $? -ne 0 ]
 		then
 			echo  "Yum安装又失败了"
@@ -120,7 +120,7 @@ then
 		/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
 		yum clear all && yum makecache
 		echo  "重装yum..."
-		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel
+		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel --skip-broken
 		if [ `rpm -qa|grep -Eo 'gcc|python-devel|openssl-devel|mysql-devel|swig|httpd|httpd-devel|libevent-devel'|sort|uniq|wc -l` -lt 8 ]
 		then
 			echo "有些包不能安装上..."
@@ -157,7 +157,7 @@ then
 		fi
 	fi
 	echo "使用pip安装"
-	pip install    MySQL-python paramiko hashlib django-redis django-redis-cache  redis   pycrypto-on-pypi
+	pip install    MySQL-python paramiko hashlib django-redis django-redis-cache  redis   pycrypto-on-pypi  django-cors-headers
 	if  [ $? -ne 0 ]
 	then
 		echo "安装失败,如果错误信息是 time out 可能是您的网络不好导致的，请重试安装即可"
@@ -246,7 +246,7 @@ EOF
 		fi
 	else
 		echo "为您自动安装Mysql服务器..."
-		yum install mysql-server -y
+		yum install mysql-server -y --skip-broken
 		if [ $? -ne 0 ]
 		then
 			echo "安装mysql失败,请检查原因"
