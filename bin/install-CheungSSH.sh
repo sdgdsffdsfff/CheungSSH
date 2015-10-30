@@ -11,7 +11,7 @@ then
 fi
 echo  "Installing......"
 setenforce 0
-useradd cheungssh -d /home/cheungssh  -s /sbin/nologin #该目录是cheungssh的工作目录， 必须创建
+useradd cheungssh -d /home/cheungssh  -s /sbin/nologin 2>/dev/null #该目录是cheungssh的工作目录， 必须创建
 echo "正在复制文件..."
 if [ `dirname $0` == "." ]
 then
@@ -36,7 +36,7 @@ else
 fi
 /bin/rm -fr  /home/cheungssh/web/cheungssh 2>/dev/null
 cd /home/cheungssh/web/  &&
-unzip  -o /home/cheungssh/web/cheung*.zip
+tar xvf cheungssh.html.bz2
 if  [ $? -ne 0 ]
 then
 	echo  "解压失败"
@@ -99,7 +99,7 @@ echo $netinstall|grep -iE '^n' -q
 if [ $? -ne 0 ]
 then
 	echo  "使用Yum安装..."
-	yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip
+	yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel
 	if  [ $? -ne 0 ]
 	then
 		echo "安装失败,重试中...."
@@ -107,69 +107,64 @@ then
 		/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
 		yum clear all && yum makecache
 		echo  "重装yum..."
-		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip
+		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel
 		if  [ $? -ne 0 ]
 		then
 			echo  "Yum安装又失败了"
 			exit 1
 		fi
-	else
-		if [ `rpm -qa|grep -Eo 'gcc|python-devel|openssl-devel|mysql-devel|swig|httpd|httpd-devel'|sort|uniq|wc -l` -lt 7 ]
+	fi
+	if [ `rpm -qa|grep -Eo 'gcc|python-devel|openssl-devel|mysql-devel|swig|httpd|httpd-devel|libevent-devel'|sort|uniq|wc -l` -lt 8 ]
+	then
+		echo  "更新Yum...."
+		/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
+		yum clear all && yum makecache
+		echo  "重装yum..."
+		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel
+		if [ `rpm -qa|grep -Eo 'gcc|python-devel|openssl-devel|mysql-devel|swig|httpd|httpd-devel|libevent-devel'|sort|uniq|wc -l` -lt 8 ]
 		then
-			echo  "更新Yum...."
-			/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
-			yum clear all && yum makecache
-			echo  "重装yum..."
-			yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip
+			echo "有些包不能安装上..."
+			exit
 		fi
-		
-		which pip
+	fi
+	
+	which pip
+	if [ $? -ne 0 ]
+	then
+		python /home/cheungssh/soft/get-pip.py
 		if [ $? -ne 0 ]
 		then
-			python /home/cheungssh/soft/get-pip.py
-			if [ $? -ne 0 ]
+			echo "安装pip失败，尝试第二种方式..."
+			pythonv=`echo  "import sys;print sys.version[:3]"|python`
+			sh /home/cheungssh/bin/setuptools-0.6c11-py${pythonv}.egg
+			if  [ $? -ne 0 ]
 			then
-				echo "安装pip失败，尝试第二种方式..."
-				pythonv=`echo  "import sys;print sys.version[:3]"|python`
-				sh /home/cheungssh/bin/setuptools-0.6c11-py${pythonv}.egg
-				if  [ $? -ne 0 ]
-				then
-					echo "安装setuptools失败"
-					exit 1
-				else
-					echo "安装setuptools完成"
-				fi
-				tar xvf  /home/cheungssh/soft/pip-1.3.1.tar.gz  -C  /home/cheungssh/soft/
-				if  [ $? -ne 0 ]
-				then
-					echo "解压失败"
-					exit 1
-				else
-					echo "已解压"
-				fi
-				cd /home/cheungssh/soft/pip-1.3.1/ && python setup.py install
-				if  [ $? -ne 0 ]
-				then
-					echo "安装pip失败"
-					exit 1
-				else
-					echo  "安装pip完成"
-				fi
-			else
-				echo "安装pip完毕"
+				echo "安装setuptools失败"
+				exit 1
+			fi
+			tar xvf  /home/cheungssh/soft/pip-1.3.1.tar.gz  -C  /home/cheungssh/soft/
+			if  [ $? -ne 0 ]
+			then
+				echo "解压失败"
+				exit 1
+			fi
+			cd /home/cheungssh/soft/pip-1.3.1/ && python setup.py install
+			if  [ $? -ne 0 ]
+			then
+				echo "安装pip失败"
+				exit 1
 			fi
 		fi
-		echo "开始pip安装"
-		pip install django-cors-headers   MySQL-python paramiko hashlib django-redis django-redis-cache  redis   pycrypto-on-pypi
-		if  [ $? -ne 0 ]
-		then
-			echo "安装失败,如果错误信息是 time out 可能是您的网络不好导致的，请重试安装即可"
-			exit 1
-		else
-			echo "安装完毕"
-		fi
-		echo  "检查paramiko"
-		cat<<EOFparamiko|python
+	fi
+	echo "使用pip安装"
+	pip install    MySQL-python paramiko hashlib django-redis django-redis-cache  redis   pycrypto-on-pypi
+	if  [ $? -ne 0 ]
+	then
+		echo "安装失败,如果错误信息是 time out 可能是您的网络不好导致的，请重试安装即可"
+		exit 1
+	fi
+	echo  "检查paramiko"
+	cat<<EOFparamiko|python
 import sys,os
 try:
 	import paramiko
@@ -179,116 +174,105 @@ except:
         sys.exit(1)
 EOFparamiko
 		###
-		tar xvf /home/cheungssh/soft/Django-1.4.22.tar.gz -C  /home/cheungssh/soft/
-		cd /home/cheungssh/soft/Django-1.4.22 && python setup.py install
-		if [ $? -ne 0 ]
-		then
-			echo "安装Django失败了，请检查是否有GCC环境"
-			exit 1
-		else
-			echo "Django安装完毕"
-		fi
-		###
-		echo "开始安装IP库..."
-		cd /home/cheungssh/soft/ && tar xvf IP.tgz  && cd IP && python setup.py install
-		if [ $? -ne 0 ]
-		then
-			echo "安装IP库失败,请检查原因"
-			exit 1
-		else
-			echo "安装IP库完毕"
-		fi
+	tar xvf /home/cheungssh/soft/Django-1.4.22.tar.gz -C  /home/cheungssh/soft/
+	cd /home/cheungssh/soft/Django-1.4.22 && python setup.py install
+	if [ $? -ne 0 ]
+	then
+		echo "安装Django失败了，请检查是否有GCC环境"
+		exit 1
+	fi
+	###
+	echo "开始安装IP库..."
+	cd /home/cheungssh/soft/ && tar xvf IP.tgz  && cd IP && python setup.py install
+	if [ $? -ne 0 ]
+	then
+		echo "安装IP库失败,请检查原因"
+		exit 1
+	fi
 		###
 		
 
 		##############安装redis
-			echo "正在安装redis服务器"
-			tar xvf /home/cheungssh/soft/redis-3.0.4.tar.gz -C /home/cheungssh/
-			cd /home/cheungssh/redis-3.0.4  &&  make
-			if  [ $? -ne 0 ]
-			then
-				echo "安装redis服务器失败了，请检查原因"
-				exit 1
-			else
-				echo "redis安装完毕"
-			fi
+	echo "正在安装redis服务器"
+	tar xvf /home/cheungssh/soft/redis-3.0.4.tar.gz -C /home/cheungssh/
+	cd /home/cheungssh/redis-3.0.4  &&  make
+	if  [ $? -ne 0 ]
+	then
+		echo "安装redis服务器失败了，请检查原因"
+		exit 1
+	fi
 		##############安装redis
 
-		read -p  'CheungSSH需要数据库支持， 您是否有可用的Mysql服务器?  (yes/no) ' emysql
-		emysql=${emysql:-y}
-		echo $emysql|grep -iE '^n' -q
+	read -p  'CheungSSH需要数据库支持， 您是否有可用的Mysql服务器?  (yes/no) ' emysql
+	emysql=${emysql:-y}
+	echo $emysql|grep -iE '^n' -q
+	if [ $? -ne 0 ]
+	then
+		read  -p  '请指定mysql服务器IP : (默认127.0.0.1)' mip
+		read -p '请指定mysql登录账户名 (默认root)' musername
+		read -p  "请您输入您的mysql登录密码 "  mpassword
+		read -p  '请指定mysql端口 (默认3306)' mp
+		echo  "测试登录..."
+		mip=${mip:-localhost}
+		musername=${musername:-root}
+		mp=${mp:-3306}
+		mcmd="mysql -h${mip} -u${musername}  -p${mpassword} -P${mp}"
+		if [[ -z $mpassword ]]
+		then
+			mysql  -h${mip} -u${musername}  -P${mp}  <<EOF
+show databases;
+EOF
+		else
+			mysql  -h${mip} -u${musername}  -p${mpassword} -P${mp}  <<EOF
+show databases;
+EOF
+		fi
+		if  [ $? -ne 0 ]
+		then
+			echo  $mcmd
+			echo "登录mysql失败，请检查原因， 比如用户名密码是否正确，服务器端口，IP是否正确"
+			exit 1
+		else
+			echo "Mysql配置正确"
+		fi
+		sed -i  "s/'USER': 'root'/'USER': '$musername'/g"                /home/cheungssh/mysite//mysite/settings.py  &&
+		sed -i  "s/'PASSWORD': 'zhang'/'PASSWORD': '$mpassword'/g"     /home/cheungssh/mysite//mysite/settings.py  &&
+		sed -i  "s/'HOST': 'localhost'/'HOST': '$mip'/g"             /home/cheungssh/mysite//mysite/settings.py  &&
+		sed -i  "s/'PORT': '3306'/'PORT': '$mp'/g"     /home/cheungssh/mysite//mysite/settings.py
+		if  [ $? -ne 0 ]
+		then
+			echo "Django配置数据库错误，请检查配置"
+			exit 1
+		fi
+	else
+		echo "为您自动安装Mysql服务器..."
+		yum install mysql-server -y
 		if [ $? -ne 0 ]
 		then
-			read  -p  '请指定mysql服务器IP : (默认127.0.0.1)' mip
-			read -p '请指定mysql登录账户名 (默认root)' musername
-			read -p  "请您输入您的mysql登录密码 "  mpassword
-			read -p  '请指定mysql端口 (默认3306)' mp
-			echo  "测试登录..."
-			mip=${mip:-localhost}
-			musername=${musername:-root}
-			mp=${mp:-3306}
-			mcmd="mysql -h${mip} -u${musername}  -p${mpassword} -P${mp}"
-			if [[ -z $mpassword ]]
-			then
-				mysql  -h${mip} -u${musername}  -P${mp}  <<EOF
-show databases;
-EOF
-			else
-				mysql  -h${mip} -u${musername}  -p${mpassword} -P${mp}  <<EOF
-show databases;
-EOF
-			fi
-			if  [ $? -ne 0 ]
-			then
-				echo  $mcmd
-				echo "登录mysql失败，请检查原因， 比如用户名密码是否正确，服务器端口，IP是否正确"
-				exit 1
-			else
-				echo "Mysql配置正确"
-			fi
-			sed -i  "s/'USER': 'root'/'USER': '$musername'/g"                /home/cheungssh/mysite//mysite/settings.py  &&
-			sed -i  "s/'PASSWORD': 'zhang'/'PASSWORD': '$mpassword'/g"     /home/cheungssh/mysite//mysite/settings.py  &&
-			sed -i  "s/'HOST': 'localhost'/'HOST': '$mip'/g"             /home/cheungssh/mysite//mysite/settings.py  &&
-			sed -i  "s/'PORT': '3306'/'PORT': '$mp'/g"     /home/cheungssh/mysite//mysite/settings.py
-			if  [ $? -ne 0 ]
-			then
-				echo "Django配置数据库错误，请检查配置"
-				exit 1
-			else
-				echo "配置数据库完毕"
-			fi
-		else
-			echo "为您自动安装Mysql服务器..."
-			yum install mysql-server -y
-			if [ $? -ne 0 ]
-			then
-				echo "安装mysql失败,请检查原因"
-				exit 1
-			else
-				echo -e "Mysql服务器已经安装完毕\n正在尝试启动Mysql服务器..."
-				service mysqld restart
-				if  [ $? -ne 0 ]
-				then
-					echo "启动Mysql失败，请检查原因"
-					exit 1
-				else
-					echo "已经启动Mysql服务器"
-				fi
-			fi
-			echo  "修改mysql root的密码为zhang"
-			if [ `mysqladmin -uroot password zhang` -ne 0 ]
-			then
-				echo "修改mysql数据库密码失败，请检查原因，比如初始密码是否不是空的."
-				exit 1
-			else
-				mip='localhost'
-				musername="root"
-				mpassword="zhang"
-				mp=3306
-				echo "修改成功"
-			fi
-			#创建cheungssh数据库
+			echo "安装mysql失败,请检查原因"
+			exit 1
 		fi
+		echo -e "Mysql服务器已经安装完毕\n正在尝试启动Mysql服务器..."
+		service mysqld restart
+		if  [ $? -ne 0 ]
+		then
+			echo "启动Mysql失败，请检查原因"
+			exit 1
+		else
+			echo "已经启动Mysql服务器"
+		fi
+		echo  "修改mysql root的密码为zhang"
+		if [ `mysqladmin -uroot password zhang` -ne 0 ]
+		then
+			echo "修改mysql数据库密码失败，请检查原因，比如初始密码是否不是空的."
+			exit 1
+		fi
+		mip='localhost'
+		musername="root"
+		mpassword="zhang"
+		mp=3306
+		echo "修改成功"
+		#创建cheungssh数据库
 		mysql -uroot -h${mip} -u${musername} -p${mpassword} -P${mp} -e 'create database if not exists cheungssh  default charset utf8'
 		if  [ $? -ne 0 ]
 		then
@@ -314,8 +298,6 @@ EOF
 		then
 			echo "安装mod_python失败，请检查原因"
 			exit 1
-		else
-			echo "安装mod_python完成"
 		fi
 		##########
 		/bin/cp /home/cheungssh/conf/version.py $(dirname `find   /usr/lib*/python*/site-packages/mod_python  -type f -name version.py`)
@@ -323,18 +305,13 @@ EOF
 		then
 			echo "修改mod_python失败，请检查原因"
 			exit 1
-		else
-			echo "修改mod_python完毕"
 		fi
 		##########
-		#mod_python version问题和apache访问权限问题
 		/bin/cp  /home/cheungssh/conf/httpd.conf /etc/httpd/conf/httpd.conf
 		if  [ $? -ne 0 ]
 		then
 			echo "复制Apache配置文件失败，请检查原因"
 			exit 1
-		else
-			echo "复制Apache配置完成"
 		fi
 		sed -i  "/^Listen/d" /etc/httpd/conf/httpd.conf  &&
 		echo "Listen $port" >> /etc/httpd/conf/httpd.conf
@@ -342,8 +319,6 @@ EOF
 		then
 			echo "修改配置失败,请检查原因"
 			exit 1
-		else
-			echo "修改配置端口完毕"
 		fi
 		########3
 		chown -R  root.cheungssh /etc/httpd/ 2>/dev/null
@@ -352,8 +327,6 @@ EOF
 		then
 			echo "赋权失败 ，请检查目录是否正确"
 			exit
-		else
-			echo "赋权完成"
 		fi
 		sh /home/cheungssh/bin/cheungssh-service.sh start
 		if  [ $? -ne 0 ]
@@ -363,7 +336,6 @@ EOF
 			exit 1
 		fi
 		clear
-		
 		echo  -e "\n\t\t\t强烈建议首选谷歌浏览器登陆! 其次360的极速模式 猎豹,否则不兼容"
 		echo -e "\n\t安装CheungSSH完毕，请使用:\n\t用户名:\tcheungssh\n\t密码:\tcheungssh\n\t登录:\thttp://$IP/cheungssh/"
 		echo  -e "\n\n启动CheungSSH服务命令:\n\t\t /home/cheungssh/bin/cheungssh-service.sh start"

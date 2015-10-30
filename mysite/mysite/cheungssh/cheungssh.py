@@ -115,7 +115,7 @@ def download_file(request):
 	else:
 		info["msgtype"]='OK'
 		server_head=request.META['HTTP_HOST']
-		info["url"]="http://%s/cheungssh/download/%s" % (server_head,downfile)
+		info["url"]="http://%s/download/%s" % (server_head,downfile)
 		
 
 
