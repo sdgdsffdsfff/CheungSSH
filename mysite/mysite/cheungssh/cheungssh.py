@@ -724,3 +724,5 @@ def sshcheck(request):
 	else:
 		info="%s(%s)"  % (callback,info)
 	return HttpResponse(info)
+def cheungssh_index_redirect(request):
+	return HttpResponseRedirect('/cheungssh/')
