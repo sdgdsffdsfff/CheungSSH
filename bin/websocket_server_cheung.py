@@ -216,17 +216,23 @@ class WebSocket(threading.Thread):#继承Thread
         self.handshaken = False
 
         while True:
+            print 'hah...'
             if self.handshaken == False:
-                #print ('Socket%s Start Handshaken with %s!' % (self.index,self.remote))
+                print ('Socket%s Start Handshaken with %s!' % (self.index,self.remote))
 		if self.remote[0]=="127.0.0.1":
 			while True:
-				self.conn.settimeout(1200)
+				#self.conn.settimeout(1200)
 				info_tmp=bytes.decode(self.conn.recv(1024))
                	 		self.buffer += info_tmp
-				if not info_tmp:
+				#if not info_tmp:
+				#	break
+				try:
+					eval(self.buffer)
 					break
+				except:
+					pass
 		else:
-			self.buffer=bytes.decode(self.conn.recv(104857600))
+			self.buffer=bytes.decode(self.conn.recv(1024))
                 info=self.buffer
 
 
@@ -258,6 +264,7 @@ class WebSocket(threading.Thread):#继承Thread
                     self.buffer_utf8 = ""
                     g_code_length = 0                    
 		else:
+			print 2222222222222222222222
 			T=sendMessage(info)
 			if T=='Error':
 				print "断开接收通道"
@@ -267,6 +274,7 @@ class WebSocket(threading.Thread):#继承Thread
 
 
             else:
+		print 1111111111111111111111
                 global g_header_length
 		mm=''
 		try:
@@ -298,6 +306,7 @@ class WebSocket(threading.Thread):#继承Thread
                     g_code_length = 0
                     self.length_buffer = 0
             self.buffer = ""
+	    break  #####既然没有了连接，就断开吧#####
 
 
 class WebSocketServer(object):

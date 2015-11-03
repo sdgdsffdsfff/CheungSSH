@@ -92,6 +92,7 @@ def cheungssh_logout(request):
 	else:
 		backstr="%s(%s)"  % (callback,info)
 	return HttpResponse(backstr)
+@login_check.login_check()
 def download_file(request):
 	info={"msgtype":"ERR","content":""}
 	file=request.GET.get('file')
@@ -104,7 +105,7 @@ def download_file(request):
 			info['msgtype']='OK'
 	except Exception,e:
 		info["content"]="传入的参数不是一个json格式"
-	downfile=str(random.randint(90000000000000000000,99999999999999999999)) + '.tar.gz '
+	downfile="%s.tar.gz" %str(random.randint(90000000000000000000,99999999999999999999))
 	cmd="tar zcf  /home/cheungssh/download/%s  " % downfile +  " ".join(file)
 	print cmd
 	T=commands.getstatusoutput(cmd)
@@ -115,7 +116,7 @@ def download_file(request):
 	else:
 		info["msgtype"]='OK'
 		server_head=request.META['HTTP_HOST']
-		info["url"]="http://%s/download/%s" % (server_head,downfile)
+		info["url"]="http://%s/cheungssh/download/file/%s" % (server_head,downfile)
 		
 
 
@@ -273,11 +274,14 @@ def filetrans(request):
 		info["content"]="请求格式错误"
 	info=json.dumps(info)
 	if callback is None:
-		backstr=info
+		info=info
 	else:
-		backstr="%s(%s)"  % (callback,info)
-	print backstr
-	return HttpResponse(backstr)
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response
 #@auth_check.auth_check #提到前面
 def haha(request):
 	return HttpResponse('haha')
@@ -319,20 +323,23 @@ def configmodify(request):
 				t_allgroupall=cache.get('allconf')
 				id=host['id']
 				if t_allgroupall:
+					print '浏览器的参数',host
 					for b in host.keys():
-						print "id::::::",b,host['id'],host
-						if b=='id' or b=="owner":
+						if b=='id' or b=="owner" or not host[b]:
+							print '跳过'
 							continue
 						else:
 							t_allgroupall['content'][id][b]=host[b]
 							info['msgtype']='OK'
 							cache.set('allconf',t_allgroupall,36000000000000)
-							break
 				else:
 					info['content']='未装载配置'
 			except KeyError:
+				info['msgtype']='ERR'
+				print '发生错误，配置不存在'
 				info['content']="配置不存在"
 			except Exception,e:
+				info['msgtype']='ERR'
 				print "错误",e
 				
 		elif modify_type=="add":
@@ -341,6 +348,7 @@ def configmodify(request):
 			t_allgroupall=cache.get('allconf')
 			host['id']=id
 			host['owner']=username
+			if not host.has_key('password'):host['password']=""
 			if t_allgroupall:
 				t_allgroupall['content'][id]=host
 			else:
@@ -709,6 +717,7 @@ def sshcheck(request):
 	id=request.GET.get('id')
 	try:
 		conf=db_to_redis_allconf.allhostconf()['content'][id]
+		print conf,5555555555555555555555555555555555
 		sshcheck=ssh_check.ssh_check(conf)
 		if sshcheck['msgtype']=="OK":
 			info['status']="OK"

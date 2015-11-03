@@ -33,7 +33,8 @@ def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,s
 		while True:
 			print "当前值:",resp
 			if re.search("\[sudo\] +password for.*:",resp):
-				ssh.send("%s\n"%password)
+				print sudopassword,1111111111111111111111111111111111111
+				ssh.send("%s\n"%sudopassword)
 				print "已经发送密码"
 				while True:
 					print '开始接受正式命令消息,下面在recv...'

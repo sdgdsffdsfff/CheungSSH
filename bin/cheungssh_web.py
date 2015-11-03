@@ -134,7 +134,7 @@ def main(cmd,ie_key,selectserver,Data,excutetype='cmd',hwtype='CPU'):
 		if Data.conf[id]["su"]=="Y" and excutetype=='cmd' :
 			b=threading.Thread(target=cheungssh_su.Excute_suroot,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data.conf[id]["supassword"],Data))
 		elif Data.conf[id]["sudo"]=="Y" and excutetype=='cmd':
-			b=threading.Thread(target=cheungssh_sudo.Excute_sudo,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data.conf[id]["password"],Data))
+			b=threading.Thread(target=cheungssh_sudo.Excute_sudo,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data.conf[id]["sudopassword"],Data))
 		else:
 			b=threading.Thread(target=SSH_cmd,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data))
 		b.start()

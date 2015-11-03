@@ -99,7 +99,7 @@ echo $netinstall|grep -iE '^n' -q
 if [ $? -ne 0 ]
 then
 	echo  "使用Yum安装..."
-	yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel 
+	yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel
 	if  [ $? -ne 0 ]
 	then
 		echo "安装失败,重试中...."
@@ -107,7 +107,7 @@ then
 		/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
 		yum clear all && yum makecache
 		echo  "重装yum..."
-		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel  --skip-broken
+		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel --skip-broken
 		if  [ $? -ne 0 ]
 		then
 			echo  "Yum安装又失败了"
@@ -123,17 +123,7 @@ then
 		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel --skip-broken
 		if [ `rpm -qa|grep -Eo 'gcc|python-devel|openssl-devel|mysql-devel|swig|httpd|httpd-devel|libevent-devel'|sort|uniq|wc -l` -lt 8 ]
 		then
-			echo "有些包不能安装上...如下:"
-			a="gcc python-devel openssl-devel mysql-devel swig httpd httpd-devel libevent-devel"
-			for b in $a
-			do
-				rpm -qa|grep $b
-				if  [ $? -ne 0 ]
-				then
-					echo "$b 不存在"
-					exit 1
-				fi
-			done
+			echo "有些包不能安装上..."
 			exit
 		fi
 	fi
@@ -263,11 +253,7 @@ EOF
 			exit 1
 		fi
 		echo -e "Mysql服务器已经安装完毕\n正在尝试启动Mysql服务器..."
-		if [ -f /etc/init.d/mysql ] && [! -f /etc/init.d/mysqld ]
-		then
-			/bin/mv /etc/init.d/mysql /etc/init.d/mysqld
-		fi
-		/etc/init.d/mysqld restart
+		service mysqld restart
 		if  [ $? -ne 0 ]
 		then
 			echo "启动Mysql失败，请检查原因"
@@ -285,83 +271,76 @@ EOF
 		musername="root"
 		mpassword="zhang"
 		mp=3306
+		echo "修改成功"
+		#创建cheungssh数据库
+		mysql -uroot -h${mip} -u${musername} -p${mpassword} -P${mp} -e 'create database if not exists cheungssh  default charset utf8'
+		if  [ $? -ne 0 ]
+		then
+			echo "连接数据库错误,请检查原因，端口， 密码， IP是否正确？您是否已经有Mysql服务器？"
+			exit 1
+		fi
+		mysql -uroot -h${mip} -u${musername} -p${mpassword} -P${mp} cheungssh < /home/cheungssh/bin/cheungssh.sql
+		if  [ $? -ne 0 ]
+		then
+			echo "初始化数据库失败，请检查原因"
+			exit 1
+		else
+			echo "初始化数据库完成"
+		fi
+		########3
+		echo "开始安装mod_python"
+		cd /home/cheungssh/soft &&
+		tar xvf  mod_python-3.4.1.tgz  &&
+		cd  mod_python-3.4.1        &&
+		./configure    --with-apxs=/usr/sbin/apxs    --with-python=/usr/bin/python   &&
+		make && make install
+		if  [ $? -ne 0 ]
+		then
+			echo "安装mod_python失败，请检查原因"
+			exit 1
+		fi
+		##########
+		/bin/cp /home/cheungssh/conf/version.py $(dirname `find   /usr/lib*/python*/site-packages/mod_python  -type f -name version.py`)
+		if  [ $? -ne 0 ]
+		then
+			echo "修改mod_python失败，请检查原因"
+			exit 1
+		fi
+		##########
+		/bin/cp  /home/cheungssh/conf/httpd.conf /etc/httpd/conf/httpd.conf
+		if  [ $? -ne 0 ]
+		then
+			echo "复制Apache配置文件失败，请检查原因"
+			exit 1
+		fi
+		sed -i  "/^Listen/d" /etc/httpd/conf/httpd.conf  &&
+		echo "Listen $port" >> /etc/httpd/conf/httpd.conf
+		if  [ $? -ne 0 ]
+		then
+			echo "修改配置失败,请检查原因"
+			exit 1
+		fi
+		########3
+		chown -R  root.cheungssh /etc/httpd/ 2>/dev/null
+		chown -R cheungssh.cheungssh /home/cheungssh
+		if [ $? -ne 0 ]
+		then
+			echo "赋权失败 ，请检查目录是否正确"
+			exit
+		fi
+		sh /home/cheungssh/bin/cheungssh-service.sh start
+		if  [ $? -ne 0 ]
+		then
+			echo  -e "\n\n启动HTTP方式 /home/cheungssh/bin/cheungssh-service.sh start"
+			echo "启动CheungSSH失败"
+			exit 1
+		fi
+		clear
+		echo  -e "\n\t\t\t强烈建议首选谷歌浏览器登陆! 其次360的极速模式 猎豹,否则不兼容"
+		echo -e "\n\t安装CheungSSH完毕，请使用:\n\t用户名:\tcheungssh\n\t密码:\tcheungssh\n\t登录:\thttp://$IP/cheungssh/"
+		echo  -e "\n\n启动CheungSSH服务命令:\n\t\t /home/cheungssh/bin/cheungssh-service.sh start"
+		###
 	fi
-	#创建cheungssh数据库
-	mysql -uroot -h${mip} -u${musername} -p${mpassword} -P${mp} -e 'create database if not exists cheungssh  default charset utf8'
-	if  [ $? -ne 0 ]
-	then
-		echo "连接数据库错误,请检查原因，端口， 密码， IP是否正确？您是否已经有Mysql服务器？"
-		exit 1
-	fi
-	mysql -uroot -h${mip} -u${musername} -p${mpassword} -P${mp} cheungssh < /home/cheungssh/bin/cheungssh.sql
-	if  [ $? -ne 0 ]
-	then
-		echo "初始化数据库失败，请检查原因"
-		exit 1
-	else
-		echo "初始化数据库完成"
-	fi
-	########3
-	APXS=`which apxs`
-	APXS=${APXS:-/usr/sbin/apxs}
-	if [ ! -f $APXS ]
-	then
-		echo  "没有apxs文件"
-		exit 1
-	fi
-	PYTHON=`wich python`
-	echo "开始安装mod_python"
-	cd /home/cheungssh/soft &&
-	tar xvf  mod_python-3.4.1.tgz  &&
-	cd  mod_python-3.4.1        &&
-	./configure    --with-apxs=$APXS    --with-python=$PYTHON   &&
-	make && make install
-	if  [ $? -ne 0 ]
-	then
-		echo "安装mod_python失败，请检查原因"
-		exit 1
-	fi
-	##########
-	/bin/cp /home/cheungssh/conf/version.py $(dirname `find   /usr/lib*/python*/site-packages/mod_python  -type f -name version.py`)
-	if  [ $? -ne 0 ]
-	then
-		echo "修改mod_python失败，请检查原因"
-		exit 1
-	fi
-	##########
-	/bin/cp  /home/cheungssh/conf/httpd.conf /etc/httpd/conf/httpd.conf
-	if  [ $? -ne 0 ]
-	then
-		echo "复制Apache配置文件失败，请检查原因"
-		exit 1
-	fi
-	sed -i  "/^Listen/d" /etc/httpd/conf/httpd.conf  &&
-	echo "Listen $port" >> /etc/httpd/conf/httpd.conf
-	if  [ $? -ne 0 ]
-	then
-		echo "修改配置失败,请检查原因"
-		exit 1
-	fi
-	########3
-	chown -R  root.cheungssh /etc/httpd/ 2>/dev/null
-	chown -R cheungssh.cheungssh /home/cheungssh
-	if [ $? -ne 0 ]
-	then
-		echo "赋权失败 ，请检查目录是否正确"
-		exit
-	fi
-	sh /home/cheungssh/bin/cheungssh-service.sh start
-	if  [ $? -ne 0 ]
-	then
-		echo  -e "\n\n启动HTTP方式 /home/cheungssh/bin/cheungssh-service.sh start"
-		echo "启动CheungSSH失败"
-		exit 1
-	fi
-	clear
-	echo  -e "\n\t\t\t强烈建议首选谷歌浏览器登陆! 其次360的极速模式 猎豹,否则不兼容"
-	echo -e "\n\t安装CheungSSH完毕，请使用:\n\t用户名:\tcheungssh\n\t密码:\tcheungssh\n\t登录:\thttp://$IP/cheungssh/"
-	echo  -e "\n\n启动CheungSSH服务命令:\n\t\t /home/cheungssh/bin/cheungssh-service.sh start"
-	###
 	exit 
 	###############################################yum安装
 else

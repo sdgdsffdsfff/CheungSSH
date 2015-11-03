@@ -74,7 +74,7 @@ def groupinfoall(request):
 			t_host["sudo"]=a.Sudo
 			t_host["su"]=a.Su
 			t_host["supassword"]=a.SuPassword
-			#t_host["sudopassword"]=a.SudoPassword
+			t_host["sudopassword"]=a.SudoPassword
 			t_host["loginmethod"]=a.LoginMethod
 			allconfinfo['content'][a.id]=t_host
 			cache.set("allconf",allconfinfo,360000)
@@ -82,7 +82,7 @@ def groupinfoall(request):
 		for b in t_allconfinfo['content'].keys():
 			t_allconfinfo['content'][b]['password']="**********"
 			t_allconfinfo['content'][b]['supassword']="**********"
-			#t_allconfinfo['content'][b]['sudopassword']="**********"
+			t_allconfinfo['content'][b]['sudopassword']="**********"
                 allconfinfo=t_allconfinfo	
 	#allconfinfo_web=allconfinfo['content'].values()
 	allconfinfo_web=[]
@@ -97,10 +97,14 @@ def groupinfoall(request):
 	allconfinfo['content']=allconfinfo_web
 	info=json.dumps(allconfinfo,encoding="utf8",ensure_ascii=False)
 	if callback is None:
-		backstr=info
+		info=info
 	else:
-		backstr="%s(%s)"  % (callback,info)
-	return HttpResponse(backstr)
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+        return response
 @login_check.login_check()
 def groupinfo(request):
         groupinfo={"msgtype":"OK","content":[]}
