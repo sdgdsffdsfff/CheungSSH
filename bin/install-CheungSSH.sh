@@ -168,7 +168,7 @@ then
 		fi
 	fi
 	echo "使用pip安装"
-	pip install    MySQL-python paramiko hashlib django-redis django-redis-cache  redis   pycrypto-on-pypi  django-cors-headers
+	pip install    MySQL-python paramiko hashlib django-redis django-redis-cache  redis   pycrypto-on-pypi  django-cors-headers setuptools
 	if  [ $? -ne 0 ]
 	then
 		echo "安装失败,如果错误信息是 time out 可能是您的网络不好导致的，请重试安装即可"
@@ -264,7 +264,7 @@ EOF
 			exit 1
 		fi
 		echo -e "Mysql服务器已经安装完毕\n正在尝试启动Mysql服务器..."
-		if [ -f /etc/init.d/mysql ] && [! -f /etc/init.d/mysqld ]
+		if [ -f /etc/init.d/mysql ] && [ ! -f /etc/init.d/mysqld ]
 		then
 			/bin/mv /etc/init.d/mysql /etc/init.d/mysqld
 		fi
