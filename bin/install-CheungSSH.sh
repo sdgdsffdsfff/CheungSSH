@@ -107,7 +107,11 @@ then
 		/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
 		yum clear all && yum makecache
 		echo  "重装yum..."
+<<<<<<< HEAD
 		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel  --skip-broken
+=======
+		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel --skip-broken
+>>>>>>> origin/master
 		if  [ $? -ne 0 ]
 		then
 			echo  "Yum安装又失败了"
@@ -263,7 +267,11 @@ EOF
 			exit 1
 		fi
 		echo -e "Mysql服务器已经安装完毕\n正在尝试启动Mysql服务器..."
+<<<<<<< HEAD
 		if [ -f /etc/init.d/mysql ] && [! -f /etc/init.d/mysqld ]
+=======
+		if [ -f /etc/init.d/mysql ]
+>>>>>>> origin/master
 		then
 			/bin/mv /etc/init.d/mysql /etc/init.d/mysqld
 		fi
@@ -302,6 +310,7 @@ EOF
 		echo "初始化数据库完成"
 	fi
 	########3
+<<<<<<< HEAD
 	APXS=`which apxs`
 	APXS=${APXS:-/usr/sbin/apxs}
 	if [ ! -f $APXS ]
@@ -310,11 +319,17 @@ EOF
 		exit 1
 	fi
 	PYTHON=`wich python`
+=======
+>>>>>>> origin/master
 	echo "开始安装mod_python"
 	cd /home/cheungssh/soft &&
 	tar xvf  mod_python-3.4.1.tgz  &&
 	cd  mod_python-3.4.1        &&
+<<<<<<< HEAD
 	./configure    --with-apxs=$APXS    --with-python=$PYTHON   &&
+=======
+	./configure    --with-apxs=/usr/sbin/apxs    --with-python=/usr/bin/python   &&
+>>>>>>> origin/master
 	make && make install
 	if  [ $? -ne 0 ]
 	then
