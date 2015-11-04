@@ -19,7 +19,8 @@ def hostinfo(request):
 			if a['group']==group:
 				try:
 					if a['owner']==username:
-						host_in_group.append({"ip": "%s@%s" % (a['username'],a['ip']),"id":a["id"]})
+						#host_in_group.append({"ip": "%s@%s" % (a['username'],a['ip']),"id":a["id"]})
+						host_in_group.append({"ip": "%s" % (a['ip']),"id":a["id"]})
 				except KeyError:
 					print '不存在所属用户'
 					pass

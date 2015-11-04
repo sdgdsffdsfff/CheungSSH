@@ -89,7 +89,7 @@ STATICFILES_DIRS = (
     # Don't forget to use absolute paths, not relative paths.
 	'/home/cheungssh/web/cheungssh/static/',
 )
-################
+
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
@@ -117,8 +117,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',    ###########
-    'django.middleware.common.CommonMiddleware',#############
+    'corsheaders.middleware.CorsMiddleware',    
+    'django.middleware.common.CommonMiddleware',
 )
 
 ROOT_URLCONF = 'mysite.urls'

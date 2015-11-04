@@ -192,7 +192,7 @@ EOFparamiko
 		###
 		
 
-		##############安装redis
+		
 	echo "正在安装redis服务器"
 	tar xvf /home/cheungssh/soft/redis-3.0.4.tar.gz -C /home/cheungssh/
 	cd /home/cheungssh/redis-3.0.4  &&  make
@@ -201,7 +201,7 @@ EOFparamiko
 		echo "安装redis服务器失败了，请检查原因"
 		exit 1
 	fi
-		##############安装redis
+		
 
 	read -p  'CheungSSH需要数据库支持， 您是否有可用的Mysql服务器?  (yes/no) ' emysql
 	emysql=${emysql:-y}
@@ -287,7 +287,7 @@ EOF
 		else
 			echo "初始化数据库完成"
 		fi
-		########3
+		
 		echo "开始安装mod_python"
 		cd /home/cheungssh/soft &&
 		tar xvf  mod_python-3.4.1.tgz  &&
@@ -299,14 +299,14 @@ EOF
 			echo "安装mod_python失败，请检查原因"
 			exit 1
 		fi
-		##########
+		
 		/bin/cp /home/cheungssh/conf/version.py $(dirname `find   /usr/lib*/python*/site-packages/mod_python  -type f -name version.py`)
 		if  [ $? -ne 0 ]
 		then
 			echo "修改mod_python失败，请检查原因"
 			exit 1
 		fi
-		##########
+		
 		/bin/cp  /home/cheungssh/conf/httpd.conf /etc/httpd/conf/httpd.conf
 		if  [ $? -ne 0 ]
 		then
@@ -320,7 +320,7 @@ EOF
 			echo "修改配置失败,请检查原因"
 			exit 1
 		fi
-		########3
+		
 		chown -R  root.cheungssh /etc/httpd/ 2>/dev/null
 		chown -R cheungssh.cheungssh /home/cheungssh
 		if [ $? -ne 0 ]
@@ -342,7 +342,7 @@ EOF
 		###
 	fi
 	exit 
-	###############################################yum安装
+	
 fi
 ##判断是否有paramiko
 cat<<EOF|python
@@ -507,6 +507,6 @@ else
 	exit 1
 	
 fi
-#########################33
-#########################33
-#########################33
+
+
+

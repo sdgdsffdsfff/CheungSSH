@@ -325,6 +325,8 @@ def configmodify(request):
 				if t_allgroupall:
 					print '浏览器的参数',host
 					for b in host.keys():
+						if b=="ip":
+							host[b]==host['ip'].split('@')[-1]
 						if b=='id' or b=="owner" or not host[b]:
 							print '跳过'
 							continue
@@ -601,13 +603,25 @@ def get_hwinfo(request):
 @login_check.login_check(False)
 def operation_record(request):	
 	info={'msgtype':'ERR','content':[]}
+	page=request.GET.get('page')
+	pagenum=request.GET.get('pagenum')
 	callback=request.GET.get('callback')
 	get_login_record=cache.get('login_record')
 	if get_login_record:	
-		info['content']=get_login_record
+		page=int(page)  
+		pagenum=int(pagenum)  
+		endpage=pagenum*page+1
+		if page==1:
+			startpage=pagenum*(page-1) 
+			endpage=pagenum*page
+		else:
+			endpage=pagenum*page+1   
+			startpage=pagenum*(page-1)+1  
+		query_get_login=get_login_record[startpage:endpage]
+		#info['content']=get_login_record
+		info['content']=query_get_login
 	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
 	if callback is None:
-
 		backstr=info
 	else:
 		backstr="%s(%s)"  % (callback,info)

@@ -94,7 +94,7 @@ def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,s
 			Data.FailIP.append(ip)
 			buff=''
 			ResultSum=buff + "sudo %s" % (info)
-		##################
+		
 		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+username+"@"+ip,color_status)
 		Show_Result=ResultSum + '\n' #+ResultSum_count
 		jindu=int(float(Data.All_Servers_num)/float(Data.All_Servers_num_all)*100)
@@ -106,7 +106,7 @@ def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,s
 		b_id=str(random.randint(999999999,99999999999999999))
 		info["id"]=b_id
 		info=json.dumps(info,encoding='utf8',ensure_ascii=False)
-		#######	
+		
 	except Exception,e:
 		print '链接服务器错误'
 		color_status=1
@@ -121,6 +121,8 @@ def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,s
 		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 		info['id']=(str(random.randint(999999999,99999999999999999)))
 		info=json.dumps(info,encoding='utf8',ensure_ascii=False)
+	finally:
+		ssh.close()
 	#sendinfo.sendinfo(str({ie_key:info}))
 	if Data.excutetype=='cmd':
 		sendinfo.sendinfo(str({ie_key:info}))

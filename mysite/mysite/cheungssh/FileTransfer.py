@@ -15,7 +15,6 @@ def set_progres(fid,filenum,ifile,isdir,transferred, toBeTransferred):
 	lasttime=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())
 	info={"fid":fid,"msgtype":"OK","content":"","progres":"","allsize":"",'status':"running","lasttime":lasttime}
 	cache_size_id="fid:size:%s" %(fid)
-	print '挨冻..........'
 	if isdir:
 		allsize=filenum
 		nowsize=ifile
@@ -57,6 +56,7 @@ def DownFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopasswo
 			key=paramiko.RSAKey.from_private_key_file(keyfile)
 			t.connect(username = username,pkey=key)
 		else:
+			print '密码认证',username,password
 			t.connect(username = username,password = password)
 		callback_info = functools.partial(set_progres,fid,1,1,False)
 		sftp = paramiko.SFTPClient.from_transport(t)
@@ -125,7 +125,7 @@ def UploadFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopass
 		else:
 			print "密码登陆"
 			t.connect(username = username,password = password)
-		######################测试###################
+		
 		if os.path.isdir(sfile):
 			#(sdir,ddir,username,password,ip,loginmethod,keyfile,port=22,force=True,callback_info):
 			print " [%s]" % password
@@ -267,7 +267,6 @@ def getconf(host,fid,user,action):
 		hostconf["dfile"]=os.path.basename(host["sfile"])
 	else:
 		hostconf["dfile"]=host["dfile"]
-	print '启动解析....'
 	resove_conf(hostconf,fid,user,action)
 def translog(request):
 	callback=request.GET.get("callback")

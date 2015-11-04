@@ -203,7 +203,7 @@ EOFparamiko
 		###
 		
 
-		##############安装redis
+		
 	echo "正在安装redis服务器"
 	tar xvf /home/cheungssh/soft/redis-3.0.4.tar.gz -C /home/cheungssh/
 	cd /home/cheungssh/redis-3.0.4  &&  make
@@ -212,7 +212,7 @@ EOFparamiko
 		echo "安装redis服务器失败了，请检查原因"
 		exit 1
 	fi
-		##############安装redis
+		
 
 	read -p  'CheungSSH需要数据库支持， 您是否有可用的Mysql服务器?  (yes/no) ' emysql
 	emysql=${emysql:-y}
@@ -302,7 +302,7 @@ EOF
 	else
 		echo "初始化数据库完成"
 	fi
-	########3
+	
 	APXS=`which apxs`
 	APXS=${APXS:-/usr/sbin/apxs}
 	if [ ! -f $APXS ]
@@ -322,14 +322,14 @@ EOF
 		echo "安装mod_python失败，请检查原因"
 		exit 1
 	fi
-	##########
+	
 	/bin/cp /home/cheungssh/conf/version.py $(dirname `find   /usr/lib*/python*/site-packages/mod_python  -type f -name version.py`)
 	if  [ $? -ne 0 ]
 	then
 		echo "修改mod_python失败，请检查原因"
 		exit 1
 	fi
-	##########
+	
 	/bin/cp  /home/cheungssh/conf/httpd.conf /etc/httpd/conf/httpd.conf
 	if  [ $? -ne 0 ]
 	then
@@ -343,7 +343,7 @@ EOF
 		echo "修改配置失败,请检查原因"
 		exit 1
 	fi
-	########3
+	
 	chown -R  root.cheungssh /etc/httpd/ 2>/dev/null
 	chown -R cheungssh.cheungssh /home/cheungssh
 	if [ $? -ne 0 ]
@@ -364,7 +364,7 @@ EOF
 	echo  -e "\n\n启动CheungSSH服务命令:\n\t\t /home/cheungssh/bin/cheungssh-service.sh start"
 	###
 	exit 
-	###############################################yum安装
+	
 else
 	echo  "抱歉， 目前不支持本地安装，不过您可以查看CheungSSH yum所安装的包和pip安装的软件即可"
 	exit 1
@@ -484,9 +484,9 @@ chmod -R  a+x /home/cheungssh/
 echo 'PATH=$PATH:~/cheung/bin' >>/etc/profile
 . /etc/profile
 touch /home/cheungssh/flag/installed
-#########################33
+
 echo  "开始安装web组件"
-#########################33
+
 cd /home/cheungssh/soft/
 tar xvf Django-1.4.22.tar.gz  
 cd Django-1.4.22
@@ -568,6 +568,6 @@ else
 	exit 1
 	
 fi
-#########################33
-#########################33
-#########################33
+
+
+

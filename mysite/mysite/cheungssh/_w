@@ -78,7 +78,7 @@ def cheungssh_login(request):
         response["Access-Control-Allow-Methods"] = "POST"
         response["Access-Control-Allow-Credentials"] = "true"
         return response
-###############
+
 	info=json.dumps(info)
 	print info
 	return HttpResponse(info)
@@ -497,7 +497,7 @@ def crontab(request):
 								else:
 									print "加入计划任务失败",crond_write[1],crond_write[0]
 									info['content']=crond_write[1]
-								#########
+								
 							except Exception,e:
 								info['content']=str(e)
 						except Exception,e:

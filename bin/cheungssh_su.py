@@ -17,18 +17,20 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 			t.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 			t.connect(ip,port,username,password)
 		ssh=t.invoke_shell()
-		ssh.send("LANG=zh_CN.UTF-8\n")
-		ssh.send("export LANG\n")
+		#ssh.send("LANG=zh_CN.UTF-8\n")
+		#ssh.send("export LANG\n")
 		ssh.send("su - root\n")
 		buff=''
 		while not re.search("Password:",buff) and not re.search("：", buff):
 			resp=ssh.recv(9999)
 			buff += resp
+			print resp
 		ssh.send("%s\n" % (rootpassword))
 		buff1=''
 		while True:
 			resp=ssh.recv(500)
 			buff1 += resp
+			print resp
 			if  re.search('su:',buff1):
 				break
 			else:
@@ -46,6 +48,7 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 			while not buff.endswith("# "):
 				resp=ssh.recv(9999)
 				buff  += resp
+				print resp
 				bufflog  += resp.strip('\r\n') + '\\n'
 			t.close()
 			Data.All_Servers_num += 1
@@ -68,7 +71,6 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 		print 'color:',color_status
 		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+username+"@"+ip,color_status)
 		print 'color:',color_status
-			
 	except Exception,e:
 		color_status=1
 		Data.All_Servers_num += 1
@@ -77,6 +79,8 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 		ResultSum=str(e)
 		bufflog=str(e)
 		Show_Result_web_status=Format_Char_Show_web.Show_Char(str(e).replace("<","&lt;")+"\n"+username+"@"+ip,color_status)
+	finally:
+		ssh.close()
 	jindu=int(float(Data.All_Servers_num)/float(Data.All_Servers_num_all)*100)
 	if color_status==0:
 		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"OK","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
@@ -84,6 +88,7 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 	info['id']=(str(random.randint(999999999,99999999999999999)))
 	info=json.dumps(info,encoding='utf8',ensure_ascii=False)
+	print ResultSum
 	if Data.excutetype=='cmd':
 		sendinfo.sendinfo(str({ie_key:info}))
 	else:
