@@ -105,8 +105,13 @@ def download_file(request):
 			info['msgtype']='OK'
 	except Exception,e:
 		info["content"]="传入的参数不是一个json格式"
+	newfile=[]
+	for f in file:
+		tf=os.path.basename(f.rstrip('/'))  
+		newfile.append(tf)
+	os.chdir('/home/cheungssh/download/')
 	downfile="%s.tar.gz" %str(random.randint(90000000000000000000,99999999999999999999))
-	cmd="tar zcf  /home/cheungssh/download/%s  " % downfile +  " ".join(file)
+	cmd="tar zcf  /home/cheungssh/download/%s  " % downfile +  " ".join(newfile)
 	print cmd
 	T=commands.getstatusoutput(cmd)
 	if not  T[0]==0:

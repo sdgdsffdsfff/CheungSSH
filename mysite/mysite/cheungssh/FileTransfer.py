@@ -102,6 +102,8 @@ def DownFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopasswo
 		cache_translog=cache.get("translog")
 		print "抓取到异常...",e
 		logline["result"]=msg
+	finally:
+		sftp.close()
 	
 
 
