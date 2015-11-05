@@ -26,10 +26,11 @@ def ssh_check(conf):
                         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                         ssh.connect(ip,int(port),username,password)
 		info['msgtype']="OK"
-		ssh.close()
 	except Exception,e:
 		print '检测错误',e
 		info['content']=str(e)
+	finally:
+		ssh.close()
 	return info
 		
 	
