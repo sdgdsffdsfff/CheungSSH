@@ -80,10 +80,11 @@ wport=${wport:-1337}
 IP="$ip:$port"
 WIP="$ip:$wport"
 echo "正在配置.."
-sed -i  "s/112.74.205.171:800/$IP/g"   /home/cheungssh/web/cheungssh/cheungssh.html        &&
-sed -i  "s/112.74.205.171:1337/$WIP/g" /home/cheungssh/web/cheungssh/cheungssh.html     &&
-sed -i  "s/1337/$wport/g" /home/cheungssh/bin/cheungssh-service.sh                                   &&
-sed -i  "s/1337/$wport/g" /home/cheungssh/bin/websocket_server_cheung.py                  
+sed -i  "s/112.74.205.171:800/$IP/g"   /home/cheungssh/web/cheungssh/cheungssh.html         &&
+sed -i  "s/112.74.205.171:1337/$WIP/g" /home/cheungssh/web/cheungssh/cheungssh.html         &&
+sed -i  "s/1337/$wport/g" /home/cheungssh/bin/cheungssh-service.sh                          &&
+sed -i  "s/1337/$wport/g" /home/cheungssh/bin/websocket_server_cheung.py                    &&
+sed -i  "s/1337/$wport/g" /home/cheungssh/bin/sendinfo.py
 if  [ $? -ne 0 ]
 then
 	echo  "配置错误"

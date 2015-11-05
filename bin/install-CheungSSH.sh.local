@@ -344,6 +344,25 @@ EOF
 	exit 
 	
 fi
+
+
+rpm -qa|grep gcc
+if [ $? -ne 0 ]
+then
+	echo  "没有gcc环境， 请安装gcc"
+	exit 1
+fi
+rpm -qa|grep python-devel
+
+if  [ $? -ne 0 ]
+then
+	echo  "没有python-devel 请安装"
+	exit 1
+fi
+
+
+
+
 ##判断是否有paramiko
 cat<<EOF|python
 import sys,os
@@ -470,6 +489,8 @@ then
 	echo  "您的系统没有mysql-devel ，请到  http://rpmfind.net/linux/rpm2html/search.php?query=mysql-devel  下载与您系统对应的rpm包，然后安装"
 	exit 1
 fi
+
+
 #yum install -y python-setuptools  openssl-devel  mysql-devel 
 echo  "安装mysql-python"
 cd /home/cheungssh/soft &&
@@ -481,6 +502,58 @@ then
 	echo  "安装失败,请检查原因或者联系CheungSSH"
 	exit 1
 fi
+
+cd  /home/cheungssh/soft/ &&
+tar xvf django-redis-cache-1.6.3.tar.gz  &&
+cd  django-redis-cache-1.6.3  &&
+python setup.py install
+if  [ $? -ne 0 ]
+then
+	echo  "安装django-redis-cache失败"
+	exit 1
+fi
+cd  /home/cheungssh/soft/ &&
+tar xvf django-redis-4.3.0.tar.gz  &&
+cd django-redis-4.3.0  &&
+python setup.py install 
+if  [  $? -ne 0 ]
+then
+	echo  "安装django-redis失败了"
+	exit 1
+fi
+cd /home/cheungssh/soft  &&
+tar xvf pycrypto-on-pypi-2.3.tar.gz   &&
+cd pycrypto-on-pypi-2.3  &&
+python setup.py install
+if  [ $? -ne 0 ]
+then
+	echo  "安装pycrypto-on-pypi失败了"
+	exit 1
+fi
+cd /home/cheungssh/soft/  &&
+tar xvf  django-cors-headers-1.0.0.tar.gz  &&
+cd django-cors-headers-1.0.0 &&
+python setup.py install
+if  [ $? -ne 0 ]
+then
+	echo  "安装django-cors-headers失败"
+	exit 1
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 echo  "检查mysql数据库"
 read -p  "您是否有可以使用的Mysql数据库? (y/n)" mysql
 if [ $mysql  == "y" ]
