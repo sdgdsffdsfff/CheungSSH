@@ -50,14 +50,14 @@ def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data)
 			error_out='NULL'
 			ResultSum_count="服务器: %s@%s " %(username,ip)
 			Data.All_Servers_num_Succ+=1
-		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+username+"@"+ip,color_status)
+		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+ip,color_status)
 		Show_Result=ResultSum + '\n' +ResultSum_count
 		jindu=int(float(Data.All_Servers_num)/float(Data.All_Servers_num_all)*100)
 		TmpShow=Format_Char_Show_web.Show_Char(Show_Result+" 命令: "+cmd,color_status)  
 		if color_status==1:
-			info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+			info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 		else:
-			info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"OK","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+			info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"OK","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 		b_id=str(random.randint(999999999,99999999999999999))
 		info["id"]=b_id
 		info=json.dumps(info,encoding='utf8',ensure_ascii=False)
@@ -73,8 +73,8 @@ def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data)
 
                 TmpShow=Format_Char_Show_web.Show_Char(Show_Result+" 命令: "+cmd,color_status)
 		jindu=int(float(Data.All_Servers_num)/float(Data.All_Servers_num_all)*100)
-		Show_Result_web_status=Format_Char_Show_web.Show_Char(str(e).replace("<","&lt;")+"\n"+username+"@"+ip,color_status)
-		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+		Show_Result_web_status=Format_Char_Show_web.Show_Char(str(e).replace("<","&lt;")+"\n"+ip,color_status)
+		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 		info['id']=(str(random.randint(999999999,99999999999999999)))
 		info=json.dumps(info,encoding='utf8',ensure_ascii=False)
 	finally:

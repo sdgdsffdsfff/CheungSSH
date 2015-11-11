@@ -1,6 +1,8 @@
 #!/bin/bash
 setenforce 0
 start(){
+	chmod 755 -R  /var/lib/mysql/  2>/dev/null
+	chmod  777 /var/lib/mysql/mysql.sock 2>/dev/null
 	echo  "关闭防火墙"
 	service iptables stop
 	nohup python /home/cheungssh/bin/websocket_server_cheung.py >>/home/cheungssh/logs/web_run.log  2>&1 &
@@ -12,6 +14,19 @@ start(){
 		echo  "启动以上服务失败，请检查原因"
 		exit 1
 	else
+		dest_mysql_sock='/var/lib/mysql/mysql.sock'
+		if [ ! -e  $dest_mysql_sock ]
+		then
+			mkdir  -p /var/lib/mysql/ 2>/dev/null;chown mysql.mysql /var/lib/mysql/
+			mysql_sock=`grep  -E '^ *socket.*mysql.sock' /etc/my.cnf|awk  -F  '=' 'NR==1{print  $NF}'` &&
+			ln -s $mysql_sock  $dest_mysql_sock
+			
+		fi
+		if [ $? -ne 0 ]
+		then
+			echo "Mysql相关信息错误"
+			exit 1
+		fi
 		echo "已启动CheungSSH"
 	fi
 }
@@ -30,7 +45,7 @@ stop(){
 	service httpd stop 
 	service mysqld stop
 	killall  -9 httpd 2>/dev/null
-	killall  -9 redis-server 2>/dev/null
+	/home/cheungssh/redis-3.0.4/src/redis-cli -a testpassword shutdown    &&
 	netstat -anplut|grep '0.0.0.0:1337'|awk   '{split($NF,A,"/") ;print A[1]}' |xargs kill  -9 {} 2>/dev/null
 
 

@@ -69,7 +69,7 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 			
 			ResultSum=buff + "Su Failed (Password Error)"
 		print 'color:',color_status
-		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+username+"@"+ip,color_status)
+		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+ip,color_status)
 		print 'color:',color_status
 	except Exception,e:
 		color_status=1
@@ -78,14 +78,14 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 		Data.FailIP.append(ip)
 		ResultSum=str(e)
 		bufflog=str(e)
-		Show_Result_web_status=Format_Char_Show_web.Show_Char(str(e).replace("<","&lt;")+"\n"+username+"@"+ip,color_status)
+		Show_Result_web_status=Format_Char_Show_web.Show_Char(str(e).replace("<","&lt;")+"\n"+ip,color_status)
 	finally:
 		ssh.close()
 	jindu=int(float(Data.All_Servers_num)/float(Data.All_Servers_num_all)*100)
 	if color_status==0:
-		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"OK","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"OK","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 	else:
-		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 	info['id']=(str(random.randint(999999999,99999999999999999)))
 	info=json.dumps(info,encoding='utf8',ensure_ascii=False)
 	print ResultSum

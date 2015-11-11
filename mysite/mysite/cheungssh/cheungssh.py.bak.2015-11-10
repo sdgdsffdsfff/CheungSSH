@@ -89,10 +89,10 @@ def cheungssh_logout(request):
 	info=json.dumps(info)
 	callback=request.GET.get('callback')
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 @login_check.login_check('文件下载到本地')
 @permission_check('local_file_download')
 def download_file(request):
@@ -129,10 +129,10 @@ def download_file(request):
 		info['content']="您尚未指定要下载的有效文件,请确认此前下载是否成功"
 	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 
 	
 @login_check.login_check('密钥管理')
@@ -160,10 +160,10 @@ def keyshow(request):
 		print e
 	info=json.dumps(info)
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 @login_check.login_check('删除密钥')
 @permission_check('cheungssh.key_del')
 def delkey(request):
@@ -185,10 +185,10 @@ def delkey(request):
 		info["content"]=str(e)
 	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 		
 @login_check.login_check('PC上传')
 #@permission_check('cheungssh.local_file_upload') 
@@ -290,6 +290,7 @@ def filetrans(request):
 	response["Access-Control-Allow-Methods"] = "POST"
 	response["Access-Control-Allow-Credentials"] = "true"
 	return response
+#@auth_check.auth_check #提到前面
 def haha(request):
 	return HttpResponse('haha')
 @login_check.login_check('命令搜索',False)
@@ -301,125 +302,105 @@ def pathsearch(request):
 	info['content']=pathinfo
 	info=json.dumps(info)
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
-
-
-@login_check.login_check('配置修改')
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
+	
+@login_check.login_check('配置增改')
 @permission_check('cheungssh.config_modify')
-def config_modify(request):
-	print 111122
+def configmodify(request):
+	modify_type=request.POST.get('type')
 	callback=request.POST.get('callback')
 	host=request.POST.get('host')
+	info={"msgtype":"ERR","content":"","id":""}
 	username=request.user.username
-	info={'msgtype':'ERR'}
-	print 77777
-	try:
-		host=eval(host)
-		if not type({})==type(host):
-			print '11111111111',host
-			raise IOError('数据格式错误，应该是一个{}')
-		t_allgroupall=cache.get('allconf')
-		id=host['id']
-		if t_allgroupall:
-			for b in host.keys():
-				if b=="ip":
-					host[b]==host['ip'].split('@')[-1]
-				if b=='id' or b=="owner" or not host[b]:
-					print '跳过'
-					continue
-				else:
-					t_allgroupall['content'][id][b]=host[b]
-				info['msgtype']='OK'
-				cache.set('allconf',t_allgroupall,36000000000000)
-		else:
-			info['content']='未装载配置'
-	except KeyError:
-		info['content']="配置不存在"
-		print '配置不存在'
-	except Exception,e:
-		info['content']=str(e)
-		print "错误",e
-	info=json.dumps(info,encoding='utf-8')
-	if callback is None:
-		info=info
-	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
-@login_check.login_check('创建服务器')
-@permission_check('cheungssh.config_add')
-def config_add(request):
-	callback=request.POST.get('callback')   
-	host=request.POST.get('host')
-	username=request.user.username
-	info={'msgtype':'ERR'}
-	id=int(random.randint(90000000000,99999999999))
-	id=json.dumps(id)
-	try:
-		host=eval(host)
-		if not type({})==type(host):raise IOError('数据格式错误，应该是一个{}')
-		t_allgroupall=cache.get('allconf')
-		host['id']=id 
-		host['owner']=username
-		if not host.has_key('password'):host['password']=""
-		if t_allgroupall:
-			t_allgroupall['content'][id]=host
-		else:
-			t_allgroupall={"msgtype":"OK","content":{}}
-			t_allgroupall['content'][id]=host
-		info['msgtype']='OK'
-		info['id']=id
-		cache.set('allconf',t_allgroupall,8640000000)
-	except Exception,e:
-		info['content']=str(e)
-	info=json.dumps(info,encoding='utf-8')
-	if callback is None:
-		info=info
-	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
-@login_check.login_check('删除服务器')
-@permission_check('cheungssh.config_del')
-def config_del(request):
-	info={'msgtype':'ERR'}
-	try:
-		host=request.GET.get('host')
-		callback=request.GET.get('callback')
-		host=eval(host)
-		if not type([])==type(host):raise IOError('参数格式错误，应该是一个[]')  
-		username=request.user.username
-		info={'msgtype':'ERR'}
+	print host,1111111111111111111111111111111,modify_type
+	if modify_type=='del':
 		try:
-			t_allgroupall=cache.get('allconf')
-			if t_allgroupall:
-				for id in host:
-					id=str(id)
-					if username==t_allgroupall['content'][id]['owner'] or request.user.is_superuser:
-						try:
-							del t_allgroupall['content'][id]
-						except KeyError:
-							pass
-						info['msgtype']='OK'
-					else:
-						info['content']="非法操作"
-						break
-			cache.set('allconf',t_allgroupall,360000000000)
-		except KeyError:
-			info['msgtype']='OK'
+			host=eval(host)
+			if not type([])==type(host):info["content"]="参数应该是一个[]"
 		except Exception,e:
-			info['content']=str(e)
-			print "错误",e,host,type(host),id,t_allgroupall
-	except Exception,e:
-		info['content']=str(e)
-	info=json.dumps(info,encoding='utf-8')
-	if callback is None:
-		info=info
+			info["content"]="参数格式错误"
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+		try:
+			host=eval(host)
+		except Exception,e:
+			info["content"]="参数格式错误"
+	if type({})==type(host) or type([])==type(host):
+		if modify_type=="modify":
+			try:
+				t_allgroupall=cache.get('allconf')
+				id=host['id']
+				if t_allgroupall:
+					print '浏览器的参数',host
+					for b in host.keys():
+						if b=="ip":
+							host[b]==host['ip'].split('@')[-1]
+						if b=='id' or b=="owner" or not host[b]:
+							print '跳过'
+							continue
+						else:
+							t_allgroupall['content'][id][b]=host[b]
+							info['msgtype']='OK'
+							cache.set('allconf',t_allgroupall,36000000000000)
+				else:
+					info['content']='未装载配置'
+			except KeyError:
+				info['msgtype']='ERR'
+				print '发生错误，配置不存在'
+				info['content']="配置不存在"
+			except Exception,e:
+				info['msgtype']='ERR'
+				print "错误",e
+				
+		elif modify_type=="add":
+			id=int(random.randint(90000000000,99999999999))
+			id=json.dumps(id)
+			t_allgroupall=cache.get('allconf')
+			host['id']=id
+			host['owner']=username
+			if not host.has_key('password'):host['password']=""
+			if t_allgroupall:
+				t_allgroupall['content'][id]=host
+			else:
+				t_allgroupall={"msgtype":"OK","content":{}}
+				t_allgroupall['content'][id]=host
+			info['msgtype']='OK'
+			info['id']=id
+			cache.set('allconf',t_allgroupall,8640000000)
+		elif modify_type=='del':
+			try:
+				t_allgroupall=cache.get('allconf')
+				if t_allgroupall:
+					for id in host:
+						id=str(id)
+						if username==t_allgroupall['content'][id]['owner']:
+							try:
+								del t_allgroupall['content'][id]
+							except KeyError:
+								pass
+							info['msgtype']='OK'
+						else:
+							info['content']="非法操作"
+							break
+				cache.set('allconf',t_allgroupall,360000000000)
+			except KeyError:
+				info['msgtype']='OK'
 
+			except Exception,e:
+				info['content']=str(e)
+				print "错误",e,host,type(host),id,t_allgroupall
+		else:
+			info["content"]="指定类型不可用"
+	else:
+		info["content"]="参数格式错误,不是一个dict"
+	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
+	if callback is None:
+		backstr=info
+	else:
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 @login_check.login_check('删除计划任务')
 @permission_check('cheungssh.crond_del')
 def delcrondlog(request):
@@ -433,10 +414,10 @@ def delcrondlog(request):
 		info['content']=delcrond_log[1]
 	info=json.dumps(info,encoding='utf-8')
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 @login_check.login_check('查看计划任务')
 @permission_check('cheungssh.crond_show')
 def showcrondlog(request):
@@ -446,10 +427,10 @@ def showcrondlog(request):
 	info['content']=crondlog_log
 	info=json.dumps(info,encoding='utf-8')
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 	
 @login_check.login_check('创建计划任务')
 def crontab(request):
@@ -538,10 +519,10 @@ def crontab(request):
 			info['content']=str(e)
 	info=json.dumps(info)
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 @login_check.login_check('',False)
 def local_upload_show(request):
 	info={'msgtype':'ERR','content':[]}
@@ -551,10 +532,10 @@ def local_upload_show(request):
 		info['content']=local_upload_all.values()
 	info=json.dumps(info)
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 @login_check.login_check('执行命令')
 @permission_check('cheungssh.excute_cmd')
 def excutecmd(request):
@@ -606,10 +587,10 @@ def excutecmd(request):
 		info['content']=str(e)
 	info=json.dumps(info)
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 @login_check.login_check('',False)
 @permission_check('cheungssh.show_cmd_history')
 def cmdhistory(request):
@@ -636,11 +617,10 @@ def cmdhistory(request):
 	info['totalnum']=totalnum
 	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
-
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 @login_check.login_check()
 def get_hwinfo(request):
 	info={'msgtype':'ERR','content':[]}
@@ -649,10 +629,10 @@ def get_hwinfo(request):
 	info['msgtype']='OK'
 	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 @login_check.login_check('',False)
 @permission_check('cheungssh.show_access_page')
 def operation_record(request):	
@@ -680,123 +660,94 @@ def operation_record(request):
 	info['totalnum']=totalnum
 	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+		backstr="%s(%s)"  % (callback,info)
+	return HttpResponse(backstr)
 @login_check.login_check('脚本执行')
-@permission_check('cheungssh.excutescript')
 def excutes_script(request):
 	info={'msgtype':'ERR','content':[]}
 	callback=request.GET.get('callback')
 	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
 	if callback is None:
-		info=info
+		backstr=info
 	else:
-		info="%s(%s)"  % (callback,info)
-	
-	return HttpResponse(info)
-
-@login_check.login_check('脚本执行')
-@permission_check('cheungssh.scriptfile_add')
-def add_script(request):
-	username=request.user.username
-	info={"msgtype":"ERR"}
-	scriptfilecontent=request.POST.get('filecontent')
-	filename=request.POST.get('filename')
-	callback=request.POST.get('callback')
-	try:
-		scriptfilepath=os.path.join(scriptfiledir,filename)
-		with open(scriptfilepath,'wb')  as f:
-			f.write(scriptfilecontent)
-		logline={}
-		logline['time']=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
-		logline['filename']=filename
-		logline['username']=username
-		scriptlogline=cache.get('scriptlogline')  
-		if scriptlogline is None:scriptlogline={}
-		scriptlogline[filename]=logline
-		cache.set('scriptlogline',scriptlogline,36000000000000)
-		info['msgtype']='OK'
-		info['content']=logline
-		print '完毕'
-	except Exception,e:
-		info['content']=str(e)
-		print 'cuowu',str(e)
-	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
-	if callback is None:
-		info=info
-	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
-@login_check.login_check('脚本执行')
+		backstr="%s(%s)"  % (callback,info)
+@login_check.login_check('查看脚本')
 @permission_check('cheungssh.scriptfile_show')
-def show_scriptcontent(request):
+def get_script(request):
 	fid=str(random.randint(90000000000000000000,99999999999999999999))  
 	info={'msgtype':'ERR','content':[]}
 	callback=request.GET.get('callback')
 	edit_type=request.GET.get('edit_type')
 	username=request.user.username
 	uploadtime=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time())) 
-	filename=request.GET.get('filename')
 	try:
-		scriptfilepath=os.path.join(scriptfiledir,filename)
-		with open(scriptfilepath) as f:
-			scriptfilecontent=f.read().strip()
-		info['msgtype']='OK'
-		info['content']=scriptfilecontent
-	except Exception,e:
-		info['content']=str(e)
-		print  '脚本错误',e,show_scriptlist.__name__
-	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
-	if callback is None:
-		info=info
-	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
-@login_check.login_check('脚本执行')
-def show_scriptlist(request):
-	info={"msgtype":"ERR"}
-	scriptlogline=cache.get('scriptlogline')
-	callback=request.GET.get('callback')
-	if scriptlogline:
-		info['content']=scriptlogline.values()
-	else:
-		info['content']=[]
-	info['msgtype']='OK'
-	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
-	if callback is None:
-		info=info
-	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
-def del_script(request):
-	
-	info={"msgtype":"ERR"}
-	try:
-		filenames=request.GET.get('filenames') 
-		scriptlogline=cache.get('scriptlogline')  
-		if scriptlogline:
-			for filename in  scriptlogline:
-				try:
-					del scriptlogline[filename]
-				except KeyError:
-					pass
-				except Exception,e:
-					print '错误',e
-					info['content']=str(e)
-					break
+		if edit_type=="show":
+			try:
+				filename=request.GET.get('filename')
+				scriptfilepath=os.path.join(scriptfiledir,filename)
+				with open(scriptfilepath) as f:
+					scriptfilecontent=f.read().strip()
+				info['msgtype']='OK'
+				info['content']=scriptfilecontent
+			except Exception,e:
+				info['content']=str(e)
+				print  '粗无',e
+		elif edit_type=='list':
+			scriptlogline=cache.get('scriptlogline')
+			if scriptlogline:
+				info['content']=scriptlogline.values()
 			info['msgtype']='OK'
+		elif edit_type=='add':
+			try:
+				scriptfilecontent=request.POST.get('filecontent')
+				filename=request.POST.get('filename')
+				scriptfilepath=os.path.join(scriptfiledir,filename)
+				with open(scriptfilepath,'wb')  as f:
+					f.write(scriptfilecontent)
+				logline={}
+				logline['time']=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
+				logline['filename']=filename
+				logline['username']=username
+				scriptlogline=cache.get('scriptlogline')  
+				if scriptlogline is None:scriptlogline={}
+                        	scriptlogline[filename]=logline
+                        	cache.set('scriptlogline',scriptlogline,36000000000000)
+				info['msgtype']='OK'
+				info['content']=logline
+			except Exception,e:
+				info['content']=str(e)
+		elif edit_type=='delete':
+			filenames=request.GET.get('filenames') 
+			scriptlogline=cache.get('scriptlogline')  
+			if scriptlogline:
+				for filename in  scriptlogline:
+					try:
+						del scriptlogline[filename]
+					except KeyError:
+						pass
+					except Exception,e:
+						print '错误',e
+						info['content']=str(e)
+						break
+					info['msgtype']='OK'
+			else:
+					info['msgtype']='OK'
+				
 	except Exception,e:
+		print e,'错误'
 		info['content']=str(e)
 	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
-	if callback is None:
-		info=info
+	if callback:
+		try:
+			backstr="%s(%s)" % (callback,info)
+		except Exception,e:
+			info['content']=str(e)
+			print '错误',e
 	else:
-		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
-
-
+		backstr=info
+	return HttpResponse(backstr)
 def onelinenotice(request):
 	info={'msgtype':'ERR','content':[]}
 	callback=request.GET.get('callback')

@@ -2,7 +2,7 @@
 import time,IP,json
 from django.core.cache import cache
 from django.http import HttpResponse
-def login_check(isRecord=True):
+def login_check(page='未知页面',isRecord=True):
 	def decorator(func):
 		def login_auth_check(request,*args,**kws):
 			callback=request.GET.get('callback')
@@ -10,6 +10,7 @@ def login_check(isRecord=True):
 			info['accesstime']=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
 			info['URL']=  "%s?%s"   %(request.META['PATH_INFO'],request.META['QUERY_STRING'])
 			info['IP']=request.META['REMOTE_ADDR']
+			info['page']=page
 			info['IPLocat']=IP.find(info['IP'])
 			isAuth=False
 			if request.user.is_authenticated():
@@ -18,10 +19,8 @@ def login_check(isRecord=True):
 			else:
 				info["username"]="非认证用户"
 			login_record=cache.get('login_record')
-			if login_record:
-				login_record.append(info)
-			else:
-				login_record=[info]
+			if not login_record:login_record=[]
+			login_record.insert(0,info)
 			if isRecord:
 				cache.set('login_record',login_record,86400000) 
 			if isAuth:

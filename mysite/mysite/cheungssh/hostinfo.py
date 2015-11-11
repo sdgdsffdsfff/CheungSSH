@@ -5,7 +5,8 @@ from django.http import HttpResponse
 from mysite.cheungssh.models import ServerConf
 from django.core.cache import cache
 import login_check
-@login_check.login_check()
+from permission_check import permission_check
+@login_check.login_check('',False)
 def hostinfo(request):
 	callback=request.GET.get('callback')
 	group=request.GET.get('group')
@@ -19,10 +20,10 @@ def hostinfo(request):
 			if a['group']==group:
 				try:
 					if a['owner']==username:
-						#host_in_group.append({"ip": "%s@%s" % (a['username'],a['ip']),"id":a["id"]})
+						
 						host_in_group.append({"ip": "%s" % (a['ip']),"id":a["id"]})
 				except KeyError:
-					print '不存在所属用户'
+					
 					pass
 		hostinfo['content']=host_in_group
 	info=json.dumps(hostinfo,encoding='utf-8',ensure_ascii=False)
@@ -33,7 +34,7 @@ def hostinfo(request):
 	return HttpResponse(backstr)
 	
 	
-@login_check.login_check()
+@login_check.login_check('',False)
 def get_progres(request):
 	fid=request.GET.get('fid')
 	callback=request.GET.get('callback')
@@ -53,7 +54,7 @@ def get_progres(request):
 	else:
 		backstr="%s(%s)"  % (callback,info)
 	return HttpResponse(backstr)
-@login_check.login_check()
+@login_check.login_check('',False)
 def groupinfoall(request):
 	callback=request.GET.get("callback")
 	allconfinfo={"msgtype":"OK","content":{}}
@@ -85,11 +86,11 @@ def groupinfoall(request):
 			t_allconfinfo['content'][b]['supassword']="**********"
 			t_allconfinfo['content'][b]['sudopassword']="**********"
                 allconfinfo=t_allconfinfo	
-	#allconfinfo_web=allconfinfo['content'].values()
+	
 	allconfinfo_web=[]
 	for a in allconfinfo['content'].values():
 		try:
-			if a['owner'] == username:
+			if a['owner'] == username or request.user.is_superuser: 
 				allconfinfo_web.append(a)
 		except KeyError:
 			pass
@@ -106,7 +107,7 @@ def groupinfoall(request):
 	response["Access-Control-Allow-Methods"] = "POST"
 	response["Access-Control-Allow-Credentials"] = "true"
         return response
-@login_check.login_check()
+@login_check.login_check('',False)
 def groupinfo(request):
         groupinfo={"msgtype":"OK","content":[]}
         callback=request.GET.get("callback")
@@ -134,7 +135,7 @@ def groupinfo(request):
 
 	
 
-@login_check.login_check()
+@login_check.login_check('文件传输日志',False)
 def translog(request):
 	info={"msgtype":"OK",'content':""}
 	callback=request.GET.get("callback")

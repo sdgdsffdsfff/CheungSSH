@@ -1,23 +1,21 @@
 #coding:utf-8
 from django.conf.urls import patterns, include, url
 from mysite.cheungssh.cheungssh import cheungssh_index
-#from mysite.cheungssh.cheungssh import test
 import mysite
 urlpatterns = patterns('',
 	url(r'^cheungssh/login/$','mysite.cheungssh.cheungssh.cheungssh_login'),
 	url(r'^cheungssh/logout/$','mysite.cheungssh.cheungssh.cheungssh_logout'),
-	#url(r'^cheungssh/test/$',mysite.cheungssh.cheungssh.test.as_view()), #类视图
-	#url(r'^cheungssh/test/test/$','mysite.cheungssh.cheungssh.haha'), #类视图
-	url(r'^cheungssh/t/$','mysite.cheungssh.cheungssh.t1'), #类视图
-	url(r'^cheungssh/sshcheck/$','mysite.cheungssh.cheungssh.sshcheck'), #类视图
-	#url(r'^cheungssh/test/test/test/$','mysite.cheungssh.test.haha'), #类视图
-	#url(r'^cheungssh/test/test/test/ha$','mysite.cheungssh.test.hahaha'), #类视图
+	
+	url(r'^cheungssh/t/$','mysite.cheungssh.cheungssh.t1'),
+	url(r'^cheungssh/sshcheck/$','mysite.cheungssh.cheungssh.sshcheck'),
 	url(r'^cheungssh/excutecmd/$','mysite.cheungssh.cheungssh.excutecmd'),
 	url(r'^cheungssh/cmdhistory/?$','mysite.cheungssh.cheungssh.cmdhistory'),
 	url(r'^cheungssh/upload/test/$','mysite.cheungssh.cheungssh.upload_file_test'),
 	url(r'^cheungssh/download/$','mysite.cheungssh.cheungssh.download_file'),
 	url(r'^cheungssh/pathsearch/$','mysite.cheungssh.cheungssh.pathsearch'),
-	url(r'^cheungssh/configmodify/$','mysite.cheungssh.cheungssh.configmodify'),
+	url(r'^cheungssh/configdel/$','mysite.cheungssh.cheungssh.config_del'),
+	url(r'^cheungssh/configadd/$','mysite.cheungssh.cheungssh.config_add'),
+	url(r'^cheungssh/configmodify/$','mysite.cheungssh.cheungssh.config_modify'),
 	url(r'^cheungssh/crontab/$','mysite.cheungssh.cheungssh.crontab'),
 	url(r'^cheungssh/showcrondlog/$','mysite.cheungssh.cheungssh.showcrondlog'),
 	url(r'^cheungssh/delcrondlog/$','mysite.cheungssh.cheungssh.delcrondlog'),
@@ -33,7 +31,13 @@ urlpatterns = patterns('',
 	url(r'^cheungssh/progres/$','mysite.cheungssh.hostinfo.get_progres'),
 	url(r'^cheungssh/filetrans/$','mysite.cheungssh.cheungssh.filetrans'),
 	url(r'^cheungssh/hwinfo/$','mysite.cheungssh.cheungssh.get_hwinfo'),
-	url(r'^cheungssh/script/$','mysite.cheungssh.cheungssh.get_script'),
+	url(r'^cheungssh/showscriptcontent/$','mysite.cheungssh.cheungssh.show_scriptcontent'),
+	url(r'^cheungssh/showscriptlist/$','mysite.cheungssh.cheungssh.show_scriptlist'),
+	url(r'^cheungssh/showscriptdel/$','mysite.cheungssh.cheungssh.del_script'),
+	url(r'^cheungssh/showscriptadd/$','mysite.cheungssh.cheungssh.add_script'),
 	url(r'^cheungssh/operationrecord/$','mysite.cheungssh.cheungssh.operation_record'),
-	#url(r'^cheungssh/cache/$',cache_page(cache_test,60*1)),
+#	url(r'^cheungssh/testdownload/$',mysite.cheungssh.cheungssh.test_download.as_view()),
+	url(r'^cheungssh/testdownload/$','mysite.cheungssh.cheungssh.test_download'),
+	
+	url(r'^cheungssh/perm$','mysite.cheungssh.cheungssh.check_permission'),
 	)
