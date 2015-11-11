@@ -4,6 +4,26 @@
 #coding:utf-8
 V=2.0.1
 #如果您在使用过程中，遇到了一点点的问题，我都真诚希望您能告诉我！为了改善这个软件， 方便您的工作#
+
+#CheungSSH环境安装如下:
+#python 2.6 2.7
+#django 1.4
+#django-cors-headers
+#mysql-server
+#mysql-devel
+#MySQL-python
+#httpd
+#httpd-devel
+#redis
+#python-devel
+#openssl-devel
+#gcc
+#paramiko  
+#django-redis 
+#django-redis-cache 
+#pycrypto-on-pypi 
+#setuptools
+
 export LANG=zh_CN.UTF-8
 if [ `id -u` -ne 0 ]
 then
@@ -163,7 +183,7 @@ yum_install(){
 		fi
 	fi
 	echo "使用pip安装"
-	pip install    MySQL-python paramiko hashlib django-redis django-redis-cache  redis   pycrypto-on-pypi  django-cors-headers setuptools
+	pip install    MySQL-python paramiko  django-redis django-redis-cache  redis   pycrypto-on-pypi  django-cors-headers setuptools
 	if  [ $? -ne 0 ]
 	then
 		echo "安装失败,如果错误信息是 time out 可能是您的网络不好导致的，请重试安装即可"

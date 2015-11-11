@@ -90,7 +90,7 @@ CREATE TABLE `auth_permission` (
 
 LOCK TABLES `auth_permission` WRITE;
 /*!40000 ALTER TABLE `auth_permission` DISABLE KEYS */;
-INSERT INTO `auth_permission` VALUES (1,'Can add permission',1,'add_permission'),(2,'Can change permission',1,'change_permission'),(3,'Can delete permission',1,'delete_permission'),(4,'Can add group',2,'add_group'),(5,'Can change group',2,'change_group'),(6,'Can delete group',2,'delete_group'),(7,'Can add user',3,'add_user'),(8,'Can change user',3,'change_user'),(9,'Can delete user',3,'delete_user'),(10,'Can add content type',4,'add_contenttype'),(11,'Can change content type',4,'change_contenttype'),(12,'Can delete content type',4,'delete_contenttype'),(13,'Can add session',5,'add_session'),(14,'Can change session',5,'change_session'),(15,'Can delete session',5,'delete_session'),(16,'Can add cors model',6,'add_corsmodel'),(17,'Can change cors model',6,'change_corsmodel'),(18,'Can delete cors model',6,'delete_corsmodel'),(19,'Can add main_ conf',7,'add_main_conf'),(20,'Can change main_ conf',7,'change_main_conf'),(21,'Can delete main_ conf',7,'delete_main_conf'),(22,'Can add server conf',8,'add_serverconf'),(23,'Can change server conf',8,'change_serverconf'),(24,'Can delete server conf',8,'delete_serverconf'),(25,'可执行命令',8,'excute_cmd'),(26,'执行脚本',8,'excutescript'),(27,'查看命令历史',8,'show_cmd_history'),(28,'查看操作记录',8,'show_access_page'),(29,'允许从PC上传文件',8,'local_file_upload'),(30,'允许PC下载文件',8,'local_file_download'),(31,'远程文件上传',8,'transfile_upload'),(32,'远程文件下载',8,'transfile_download'),(33,'查看文件传输记录',8,'transfile_history_show'),(34,'查看计划任务',8,'crond_show'),(35,'删除计划任务',8,'crond_del'),(36,'创建命令任务',8,'crond_create_cmd'),(37,'创建远程文件下载任务',8,'crond_create_transfile_download'),(38,'创建远程文件上传任务',8,'crond_create_transfile_upload'),(39,'秘钥上传',8,'transfile_keyfile'),(40,'删除秘钥',8,'key_del'),(41,'创建服务器',8,'config_add'),(42,'删除服务器',8,'config_del'),(43,'修改服务器',8,'config_modify'),(44,'查看服务器配置',8,'config_show'),(45,'查看脚本内容',8,'scriptfile_show'),(46,'创建脚本',8,'scriptfile_add'),(47,'Can add server info',9,'add_serverinfo'),(48,'Can change server info',9,'change_serverinfo'),(49,'Can delete server info',9,'delete_serverinfo'),(50,'Can add comment',10,'add_comment'),(51,'Can change comment',10,'change_comment'),(52,'Can delete comment',10,'delete_comment'),(53,'Can moderate comments',10,'can_moderate'),(54,'Can add comment flag',11,'add_commentflag'),(55,'Can change comment flag',11,'change_commentflag'),(56,'Can delete comment flag',11,'delete_commentflag'),(57,'Can add site',12,'add_site'),(58,'Can change site',12,'change_site'),(59,'Can delete site',12,'delete_site'),(60,'Can add log entry',13,'add_logentry'),(61,'Can change log entry',13,'change_logentry'),(62,'Can delete log entry',13,'delete_logentry');
+INSERT INTO `auth_permission` VALUES (25,'可执行命令',8,'excute_cmd'),(26,'执行脚本',8,'excutescript'),(27,'查看命令历史',8,'show_cmd_history'),(28,'查看操作记录',8,'show_access_page'),(29,'允许从PC上传文件',8,'local_file_upload'),(30,'允许PC下载文件',8,'local_file_download'),(31,'远程文件上传',8,'transfile_upload'),(32,'远程文件下载',8,'transfile_download'),(33,'查看文件传输记录',8,'transfile_history_show'),(34,'查看计划任务',8,'crond_show'),(35,'删除计划任务',8,'crond_del'),(36,'创建命令任务',8,'crond_create_cmd'),(37,'创建远程文件下载任务',8,'crond_create_transfile_download'),(38,'创建远程文件上传任务',8,'crond_create_transfile_upload'),(39,'秘钥上传',8,'transfile_keyfile'),(40,'删除秘钥',8,'key_del'),(41,'创建服务器',8,'config_add'),(42,'删除服务器',8,'config_del'),(43,'修改服务器',8,'config_modify'),(44,'查看服务器配置',8,'config_show'),(45,'查看脚本内容',8,'scriptfile_show'),(46,'创建脚本',8,'scriptfile_add');
 /*!40000 ALTER TABLE `auth_permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -124,7 +124,7 @@ CREATE TABLE `auth_user` (
 
 LOCK TABLES `auth_user` WRITE;
 /*!40000 ALTER TABLE `auth_user` DISABLE KEYS */;
-INSERT INTO `auth_user` VALUES (1,'cheungssh','','','a@q.com','pbkdf2_sha256$10000$vPgSevXeCQIu$e6Imircyp4Ps8AMzrTPucyc+eYO8JZiwXYlqxW7zkj0=',1,1,1,'2015-11-11 02:10:38','2015-11-11 02:10:38');
+INSERT INTO `auth_user` VALUES (1,'cheungssh','','','a@q.com','pbkdf2_sha256$10000$2obbA1GVker0$LWWHjMUhRz8AMiaL1hx4OrXsIMHmBxLaz5FctAnYz5U=',1,1,1,'2015-11-11 03:25:34','2015-11-11 02:10:38');
 /*!40000 ALTER TABLE `auth_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -448,6 +448,7 @@ CREATE TABLE `django_session` (
 
 LOCK TABLES `django_session` WRITE;
 /*!40000 ALTER TABLE `django_session` DISABLE KEYS */;
+INSERT INTO `django_session` VALUES ('8e0a42f6090b2aa0b4c9cde5bb5b92b2','ZWUwZTllMGQ2NDkzYjcxMTVmNWRkZmI1MTg5YjVlOTE3NDQ4Y2NhNzqAAn1xAShVEl9hdXRoX3Vz\nZXJfYmFja2VuZHECVSlkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZHED\nVQ1fYXV0aF91c2VyX2lkcQSKAQF1Lg==\n','2015-11-25 03:25:34');
 /*!40000 ALTER TABLE `django_session` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -485,4 +486,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-11-11 10:11:08
+-- Dump completed on 2015-11-11 11:27:03
