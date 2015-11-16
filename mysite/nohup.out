@@ -1,0 +1,8 @@
+WebSocketServer Start!
+Traceback (most recent call last):
+  File "/home/cheungssh/bin/websocket_server_cheung.py", line 340, in <module>
+    server.begin()
+  File "/home/cheungssh/bin/websocket_server_cheung.py", line 319, in begin
+    self.socket.bind(("0.0.0.0",1337))
+  File "<string>", line 1, in bind
+socket.error: [Errno 98] Address already in use

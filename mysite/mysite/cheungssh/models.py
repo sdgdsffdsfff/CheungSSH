@@ -26,27 +26,27 @@ class ServerConf(models.Model):
 	class Meta:
 		permissions=(
 				("excute_cmd","可执行命令"),
-				("excutescript","执行脚本"),
 				("show_cmd_history","查看命令历史"),
 				("show_access_page","查看操作记录"),
-				("local_file_upload","允许从PC上传文件"),
+				("local_file_upload","允许从PC上传文件和密钥"),
 				("local_file_download","允许PC下载文件"),
 				("transfile_upload","远程文件上传"),
 				("transfile_download","远程文件下载"),
 				("transfile_history_show","查看文件传输记录"),
 				("crond_show","查看计划任务"),
 				("crond_del","删除计划任务"),
-				("crond_create_cmd","创建命令任务"),
-				("crond_create_transfile_download","创建远程文件下载任务"),
-				("crond_create_transfile_upload","创建远程文件上传任务"),
+				("crond_create","创建计划任务"),
 				("transfile_keyfile","秘钥上传"),
 				("key_del","删除秘钥"),
+				("key_list","查看秘钥"),
 				("config_add","创建服务器"),
 				("config_del","删除服务器"),
 				("config_modify","修改服务器"),
-				("config_show","查看服务器配置"),
 				("scriptfile_show","查看脚本内容"),
 				("scriptfile_add","创建脚本"),
+				("scriptfile_del","删除脚本"),
+				("scriptfile_list","显示脚本清单"),
+				("batchconfig_web","批量从web创建服务器"),
 
 			)
 	def __unicode__(self):

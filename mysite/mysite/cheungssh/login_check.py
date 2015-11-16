@@ -5,12 +5,17 @@ from django.http import HttpResponse
 def login_check(page='未知页面',isRecord=True):
 	def decorator(func):
 		def login_auth_check(request,*args,**kws):
+			if request.method=='POST':
+				request_content=request.POST
+			else:
+				request_content=request.GET
 			callback=request.GET.get('callback')
 			info={}
 			info['accesstime']=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
 			info['URL']=  "%s?%s"   %(request.META['PATH_INFO'],request.META['QUERY_STRING'])
 			info['IP']=request.META['REMOTE_ADDR']
 			info['page']=page
+			info['request_content']=request_content
 			info['IPLocat']=IP.find(info['IP'])
 			isAuth=False
 			if request.user.is_authenticated():
@@ -22,7 +27,7 @@ def login_check(page='未知页面',isRecord=True):
 			if not login_record:login_record=[]
 			login_record.insert(0,info)
 			if isRecord:
-				cache.set('login_record',login_record,86400000) 
+				cache.set('login_record',login_record,8640000000) 
 			if isAuth:
 				return func(request,*args,**kws)
 			else:

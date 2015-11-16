@@ -4,4 +4,5 @@ admin.autodiscover()
 urlpatterns = patterns('',
 	url(r'',include('mysite.cheungssh.urls')),
     	url(r'^cheungssh/admin/', include(admin.site.urls)),
+    	url(r'^cheungssh/admin', 'mysite.cheungssh.cheungssh.redirect_admin'),
 )

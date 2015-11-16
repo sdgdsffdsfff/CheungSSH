@@ -136,6 +136,7 @@ def groupinfo(request):
 	
 
 @login_check.login_check('文件传输日志',False)
+@permission_check('cheungssh.transfile_history_show')
 def translog(request):
 	info={"msgtype":"OK",'content':""}
 	callback=request.GET.get("callback")

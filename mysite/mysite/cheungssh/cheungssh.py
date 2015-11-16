@@ -9,6 +9,7 @@ from permission_check import permission_check
 sys.path.append('/home/cheungssh/bin')
 import IP,hwinfo,DataConf,ssh_check
 import cheungssh_web,login_check
+import re
 upload_dir="/home/cheungssh/upload"
 keyfiledir="/home/cheungssh/keyfile"
 scriptfiledir="/home/cheungssh/scriptfile"
@@ -191,7 +192,7 @@ def delkey(request):
 	return HttpResponse(info)
 		
 @login_check.login_check('PC上传')
-#@permission_check('cheungssh.local_file_upload') 
+@permission_check('cheungssh.local_file_upload') 
 def upload_file_test(request):
 	fid=str(random.randint(90000000000000000000,99999999999999999999))
 	info={"msgtype":"ERR","content":"","path":""}
@@ -260,26 +261,43 @@ def upload_file_test(request):
 		print "发生错误",e
 	print response
 	return response
-@login_check.login_check('远程上传下载')
-def filetrans(request):
+####
+@login_check.login_check('远程下载')
+@permission_check('cheungssh.transfile_download')
+def filetrans_remote_download(request):
 	fid=str(random.randint(90000000000000000000,99999999999999999999))
 	info={"msgtype":"OK","fid":fid,"status":"running"}
 	host=request.GET.get('host')
-	action=request.GET.get('action')
 	callback=request.GET.get('callback')
 	lasttime=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())
 	redis_info={"msgtype":"OK","content":"","progres":"0",'status':"running","lasttime":lasttime}
 	cache.set("info:%s" % (fid),redis_info,360)
-	user=request.user.username
-	if action and host:
-		if action=="upload":
-			FileTransfer.getconf(host,fid,user,"upload")
-			print "上传"
-		else:
-			FileTransfer.getconf(host,fid,user,"download")
+	username=request.user.username
+	FileTransfer.getconf(host,fid,username,"download")
+	info=json.dumps(info)
+	if callback is None:
+		info=info
 	else:
-		info["msgtype"]="ERR"
-		info["content"]="请求格式错误"
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response
+####
+@login_check.login_check('远程上传')
+@permission_check('cheungssh.transfile_upload')
+def filetrans_remote_upload(request):
+	fid=str(random.randint(90000000000000000000,99999999999999999999))
+	info={"msgtype":"OK","fid":fid,"status":"running"}
+	host=request.GET.get('host')
+	callback=request.GET.get('callback')
+	lasttime=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())
+	redis_info={"msgtype":"OK","content":"","progres":"0",'status':"running","lasttime":lasttime}
+	cache.set("info:%s" % (fid),redis_info,360)
+	username=request.user.username
+	FileTransfer.getconf(host,fid,username,"upload")
+	
 	info=json.dumps(info)
 	if callback is None:
 		info=info
@@ -452,6 +470,7 @@ def showcrondlog(request):
 	return HttpResponse(info)
 	
 @login_check.login_check('创建计划任务')
+@permission_check('cheungssh.crond_create')
 def crontab(request):
 	runmodel="/home/cheungssh/mysite/mysite/cheungssh/"
 	callback=request.GET.get('callback')
@@ -497,8 +516,6 @@ def crontab(request):
 						print "加入计划任务失败",crond_write[1],crond_write[0]
 						info['content']=crond_write[1]
 					print 'Runtime: ',runtime
-				elif runtype=="script":
-					pass
 				elif runtype=="cmd":
 					hostinfo=request.GET.get('value')
 					try:
@@ -613,6 +630,7 @@ def excutecmd(request):
 @login_check.login_check('',False)
 @permission_check('cheungssh.show_cmd_history')
 def cmdhistory(request):
+	username=request.user.username
 	info={'msgtype':'OK','content':[]}
 	callback=request.GET.get('callback')
 	pagenum=request.GET.get('pagenum')
@@ -628,7 +646,11 @@ def cmdhistory(request):
 		else:
 			endpage=pagesize*pagenum+1   
 			startpage=pagesize*(pagenum-1)+1  
-		cmd_history=cmd_history[startpage:endpage]
+		cmd_history_t=cmd_history[startpage:endpage]
+		cmd_history=[]
+		for t in cmd_history_t:  
+			if username==t["user"] or request.user.is_superuser:
+				cmd_history.append(t)
 		info['content']=cmd_history
 		totalnum=len(cmd_history)
 	else:
@@ -656,6 +678,7 @@ def get_hwinfo(request):
 @login_check.login_check('',False)
 @permission_check('cheungssh.show_access_page')
 def operation_record(request):	
+	username=request.user.username
 	info={'msgtype':'OK','content':[]}
 	pagenum=request.GET.get('pagenum')
 	pagesize=request.GET.get('pagesize')
@@ -671,10 +694,13 @@ def operation_record(request):
 		else:
 			endpage=pagesize*pagenum+1   
 			startpage=pagesize*(pagenum-1)+1  
-		query_get_login=get_login_record[startpage:endpage]
-		#info['content']=get_login_record
+		query_get_login_tmp=get_login_record[startpage:endpage]  
+		query_get_login=[]
+		for t in query_get_login_tmp:  
+			if username==t["username"] or request.user.is_superuser:
+				query_get_login.append(t)
 		info['content']=query_get_login
-		totalnum=len(get_login_record)
+		totalnum=len(query_get_login)
 	else:
 		totalnum=0
 	info['totalnum']=totalnum
@@ -755,6 +781,7 @@ def show_scriptcontent(request):
 		info="%s(%s)"  % (callback,info)
 	return HttpResponse(info)
 @login_check.login_check('脚本执行')
+@permission_check('cheungssh.scriptfile_list')
 def show_scriptlist(request):
 	info={"msgtype":"ERR"}
 	scriptlogline=cache.get('scriptlogline')
@@ -853,3 +880,66 @@ def check_permission(request):
 		return HttpResponse('存在')
 	else:
 		return HttpResponse('不存在')
+@login_check.login_check('批量创建服务器')   
+@permission_check('cheungssh.batchconfig_web')
+def batchconfig_web(request):
+	info={"msgtype":"ERR"}
+	callback=request.POST.get('callback')
+	username=request.user.username
+	configcontent=request.POST.get('configcontent')
+	allconf=cache.get('allconf')
+	confline=''
+	batchallconf={}
+	try:
+		for p in configcontent.split('\n'):
+			id=str(random.randint(90000000000000000000,99999999999999999999))
+			p=re.sub('^ *','',p)  
+			if re.search('^#',p) or re.search('^$',p) :continue
+			confline=p.split()  
+			
+			try:int(confline[1])
+			except:raise IOError("端口应该是一个数字: %s" %confline[1])
+			if not confline[4]=='KEY' and not confline[4]=='PASSWORD':raise IOError('登录方式[%s]应该是KEY 或者 PASSWORD' % confline[4])
+			tconf={
+				"id":id,
+				"ip":confline[0],
+				"port":confline[1],
+				"group":confline[2],
+				"username":confline[3],
+				"loginmethod":confline[4],
+				"keyfile":confline[5],  
+				"password":confline[6],
+				"sudo":confline[7],
+				"sudopassword":confline[8],
+				"su":confline[9],
+				"supassword":confline[10],
+				"owner":username
+				} 
+			
+			batchallconf[id]=tconf 
+			
+		
+		if allconf is None:allconf={"content":{},"msgtype":"OK"}
+		CONF=allconf['content'].copy()
+		CONF.update(batchallconf) 
+		allconf['content']=CONF
+		cache.set('allconf',allconf,8640000000)
+		info['msgtype']='OK'
+		print '已经导入'
+	except IndexError:
+		confline=json.dumps(confline,encoding='utf-8',ensure_ascii=False)
+		info['content']='没有足够的参数: %s' % confline
+	except Exception,e:
+		info['content']=str(e)
+	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
+	if callback is None:
+		info=info
+	else:
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+        return response
+def redirect_admin(reqeust):
+	return HttpResponseRedirect('/cheungssh/admin/')
