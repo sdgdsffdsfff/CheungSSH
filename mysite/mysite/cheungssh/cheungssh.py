@@ -891,15 +891,18 @@ def batchconfig_web(request):
 	confline=''
 	batchallconf={}
 	try:
+		
+		i=0
 		for p in configcontent.split('\n'):
+			i+=1
 			id=str(random.randint(90000000000000000000,99999999999999999999))
 			p=re.sub('^ *','',p)  
 			if re.search('^#',p) or re.search('^$',p) :continue
 			confline=p.split()  
 			
 			try:int(confline[1])
-			except:raise IOError("端口应该是一个数字: %s" %confline[1])
-			if not confline[4]=='KEY' and not confline[4]=='PASSWORD':raise IOError('登录方式[%s]应该是KEY 或者 PASSWORD' % confline[4])
+			except:raise IOError("在第[%i]行,端口应该是一个数字:[%s]" %(i,confline[1]))
+			if not confline[4]=='KEY' and not confline[4]=='PASSWORD':raise IOError('在第[%d]行,登录方式[%s]应该是KEY 或者 PASSWORD' % (i,confline[4]))
 			tconf={
 				"id":id,
 				"ip":confline[0],
