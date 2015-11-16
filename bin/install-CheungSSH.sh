@@ -4,36 +4,36 @@
 #coding:utf-8
 V=2.0.1
 #如果您在使用过程中，遇到了一点点的问题，我都真诚希望您能告诉我！为了改善这个软件， 方便您的工作#
-
-echo  <<EOFshow
-#CheungSSH环境安装如下:
-#os: centos 5系列   
-#os: centos 6系列 
-#os: redhat 5系列 
-#os: redhat 6系列 
-#os: ubuntu
-#python 2.6 或者 2.7
-#gcc			如果是本地安装方式，需手动安装
-#python-devel		如果是本地安装方式，需手动安装
-#openssl-devel		如果是本地安装方式，要手动安装
-#mysql-devel		如果是本地安装方式，需手动安装
-#mysql-server		如果是本地安装方式，需手动安装
-#httpd-devel		如果是本地安装方式，需手动安装
-#httpd			如果是本地安装方式，需手动安装
-#setuptools 
-#django 1.4
-#django-cors-headers
-#MySQL-python
-#redis
-#pycrypto
-#paramiko  
-#django-redis 
-#django-redis-cache 
-#pycrypto-on-pypi 
-#mod_python
+#############################################################################
+cat  <<EOFshow
+CheungSSH环境安装如下:
+os: centos 5系列   
+os: centos 6系列 
+os: redhat 5系列 
+os: redhat 6系列 
+os: ubuntu
+python 2.6 或者 2.7
+gcc			如果是本地安装方式，需手动安装
+python-devel		如果是本地安装方式，需手动安装
+openssl-devel		如果是本地安装方式，要手动安装
+mysql-devel		如果是本地安装方式，需手动安装
+mysql-server		如果是本地安装方式，需手动安装
+httpd-devel		如果是本地安装方式，需手动安装
+httpd			如果是本地安装方式，需手动安装
+setuptools 
+django 1.4
+django-cors-headers
+MySQL-python
+redis
+pycrypto
+paramiko  
+django-redis 
+django-redis-cache 
+pycrypto-on-pypi 
+mod_python
 EOFshow
 read -p  '请知悉以上，然后按Enter继续...'
-
+#############################################################################
 export LANG=zh_CN.UTF-8
 if [ `id -u` -ne 0 ]
 then
@@ -103,7 +103,7 @@ read -p  "您需要开启一个websocket端口来实时交互命令执行结果�
 port=${port:-80}
 wport=${wport:-1337}
 export port
-import ip
+export ip
 ###
 IP="$ip:$port"
 WIP="$ip:$wport"
@@ -230,7 +230,7 @@ EOFparamiko
 		###
 		
 
-		
+		##############安装redis
 	echo "正在安装redis服务器"
 	tar xvf /home/cheungssh/soft/redis-3.0.4.tar.gz -C /home/cheungssh/  &&
 	cd /home/cheungssh/redis-3.0.4  &&  make
@@ -239,7 +239,7 @@ EOFparamiko
 		echo "安装redis服务器失败了，请检查原因"
 		exit 1
 	fi
-		
+		##############安装redis
 
 	read -p  'CheungSSH需要数据库支持， 您是否有可用的Mysql服务器?  (yes/no) ' emysql
 	emysql=${emysql:-y}
@@ -330,7 +330,7 @@ EOF
 	else
 		echo "初始化数据库完成"
 	fi
-	
+	########3
 	APXS=`which apxs`
 	APXS=${APXS:-/usr/sbin/apxs}
 	if [ ! -f $APXS ]
@@ -350,14 +350,14 @@ EOF
 		echo "安装mod_python失败，请检查原因"
 		exit 1
 	fi
-	
+	##########
 	/bin/cp /home/cheungssh/conf/version.py $(dirname `find   /usr/lib*/python*/site-packages/mod_python  -type f -name version.py`)
 	if  [ $? -ne 0 ]
 	then
 		echo "修改mod_python失败，请检查原因"
 		exit 1
 	fi
-	
+	##########
 	/bin/cp  /home/cheungssh/conf/httpd.conf /etc/httpd/conf/httpd.conf
 	if  [ $? -ne 0 ]
 	then
@@ -371,7 +371,7 @@ EOF
 		echo "修改配置失败,请检查原因"
 		exit 1
 	fi
-	
+	########3
 	chown -R  root.cheungssh /etc/httpd/ 2>/dev/null
 	chown -R cheungssh.cheungssh /home/cheungssh
 	if [ $? -ne 0 ]
@@ -397,9 +397,9 @@ EOF
 		启动CheungSSH服务: /home/cheungssh/bin/cheungssh-service.sh start"
 	###
 	exit 
-	
+	###############################################yum安装
 }
-
+#####################
 
 update(){
 	cp_file
