@@ -47,6 +47,9 @@ class ServerConf(models.Model):
 				("scriptfile_del","删除脚本"),
 				("scriptfile_list","显示脚本清单"),
 				("batchconfig_web","批量从web创建服务器"),
+				("addblackcmd","添加命令黑名单"),
+				("delblackcmd","删除命令黑名单 "),
+				("listblackcmd","查看命令黑名单"),
 
 			)
 	def __unicode__(self):

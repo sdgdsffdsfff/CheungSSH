@@ -42,4 +42,7 @@ urlpatterns = patterns('',
 	
 	url(r'^cheungssh/perm$','mysite.cheungssh.cheungssh.check_permission'),
 	url(r'^cheungssh/batchconfigweb/','mysite.cheungssh.cheungssh.batchconfig_web'),
+	url(r'cheungssh/addblackcmd/$','mysite.cheungssh.cheungssh.add_black_cmd'),
+	url(r'cheungssh/delblackcmd/$','mysite.cheungssh.cheungssh.del_black_cmd'),
+	url(r'cheungssh/listblackcmd/$','mysite.cheungssh.cheungssh.list_black_cmd'),
 	)

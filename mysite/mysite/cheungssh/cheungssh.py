@@ -19,6 +19,7 @@ from django.core.cache import cache
 from django.views.generic.base import View 
 import login_check
 import db_to_redis_allconf
+from page_list import page_list
 crond_file="/home/cheungssh/crond/crond_file"
 cmdfile="/home/cheungssh/data/cmd/cmdfile"
 def cheungssh_index(request):
@@ -191,7 +192,7 @@ def delkey(request):
 		info="%s(%s)"  % (callback,info)
 	return HttpResponse(info)
 		
-@login_check.login_check('PC上传')
+@login_check.login_check('PC上传') 
 @permission_check('cheungssh.local_file_upload') 
 def upload_file_test(request):
 	fid=str(random.randint(90000000000000000000,99999999999999999999))
@@ -242,7 +243,6 @@ def upload_file_test(request):
         response["Access-Control-Allow-Methods"] = "POST"
         response["Access-Control-Allow-Credentials"] = "true"
 	response["Access-Control-Allow-Headers"]="Content-Type"
-	return response
 	try:
 		local_upload_all=cache.get('local_upload')
 		client_ip=request.META['REMOTE_ADDR']
@@ -572,13 +572,21 @@ def local_upload_show(request):
 	else:
 		info="%s(%s)"  % (callback,info)
 	return HttpResponse(info)
+from black_cmd import black_cmd_check
 @login_check.login_check('执行命令')
 @permission_check('cheungssh.excute_cmd')
+@black_cmd_check
 def excutecmd(request):
 	info={'msgtype':'ERR','content':[]}
-	callback=request.GET.get('callback')
-	cmd=request.GET.get('cmd')
-	rid=request.GET.get("rid")
+	if request.method=='POST':
+		callback=request.POST.get('callback')
+		cmd=request.POST.get('cmd')
+		rid=request.POST.get("rid")
+	else:
+		callback=request.GET.get('callback')
+		cmd=request.GET.get('cmd')
+		rid=request.GET.get("rid")
+		
 	ie_key=rid
 	excute_time=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
 	client_ip=request.META['REMOTE_ADDR']
@@ -588,13 +596,12 @@ def excutecmd(request):
 		server=eval(cmd)
 		cmd=server['cmd']
 		selectserver=server['selectserver']
+		if not selectserver:raise IOError("没有选择执行主机")
 		Data=DataConf.DataConf()
 		a=threading.Thread(target=cheungssh_web.main,args=(cmd,ie_key,selectserver,Data))
 		a.start()
-		info['msgtype']="OK"
-	except Exception,e:
-		info['content']=str(e)
-	try:
+		#info['msgtype']="OK"
+		
 		allconf=cache.get('allconf')
 		allconf_t=allconf['content']
 		server_ip_all=[]
@@ -626,7 +633,11 @@ def excutecmd(request):
 		info=info
 	else:
 		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response
 @login_check.login_check('',False)
 @permission_check('cheungssh.show_cmd_history')
 def cmdhistory(request):
@@ -946,3 +957,75 @@ def batchconfig_web(request):
         return response
 def redirect_admin(reqeust):
 	return HttpResponseRedirect('/cheungssh/admin/')
+@login_check.login_check('添加命令黑名单')
+@permission_check('cheungssh.addblackcmd')
+def add_black_cmd(request):
+	info={"msgtype":"ERR"}
+	cmd=request.GET.get('cmd')
+	callback=request.GET.get('callback')
+	black_cmd_list=cache.get('black.cmd.list')
+	
+	create_user=request.user.username
+	create_time=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
+	client_ip=request.META['REMOTE_ADDR']
+	IP_locate=IP.find(client_ip)
+	id=str(random.randint(90000000000000000000,99999999999999999999))  
+	CMD={
+		"id":id,
+		"owner":create_user,
+		"createtime":create_time,
+		"ip":client_ip,
+		"IPlocate":IP_locate,
+		"cmd":cmd
+		}
+	if black_cmd_list is None:black_cmd_list=[]   
+	black_cmd_list.insert(0,CMD)
+	cache.set('black.cmd.list',black_cmd_list,8640000000)
+	info["msgtype"]="OK"
+	info["cid"]=id
+	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
+	if callback is None:
+		info=info
+	else:
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response
+@login_check.login_check('查看命令黑名单')
+@permission_check('cheungssh.listblackcmd')
+def list_black_cmd(request):
+	return page_list(request,'black.cmd.list')
+@login_check.login_check('删除命令黑名单')
+@permission_check('cheungssh.delblackcmd')
+def del_black_cmd(request):
+	info={"msgtype":"ERR"}
+	allid=request.GET.get('id')
+	callback=request.GET.get('callback')
+	black_cmd_list=cache.get('black.cmd.list')
+	try:
+		allid=eval(allid)
+		if not type(allid)==type([]):raise IOError("参数错误，应该是一个[]")
+		for t in black_cmd_list:
+			print t,1111111111
+			for delid in allid:
+				print delid,555555
+				if int(t['id'])==int(delid) and t["owner"] ==request.user.username or request.user.is_superuser:
+					black_cmd_list.remove(t)
+					break
+		cache.set('black.cmd.list',black_cmd_list,8640000000)
+		info["msgtype"]="OK"
+	except Exception,e:
+		print '发生了错误',e
+		info["content"]=str(e)
+	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
+	if callback is None:
+		info=info
+	else:
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response

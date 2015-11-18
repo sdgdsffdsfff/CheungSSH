@@ -162,8 +162,8 @@ INSTALLED_APPS = (
     #'django.contrib.sites',
     #'mysite.books',
     'mysite.cheungssh',
- 	 'django.contrib.comments',
-	'django.contrib.sites', 
+ 	
+	
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:

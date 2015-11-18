@@ -162,6 +162,13 @@ then
 	echo  "安装失败,请检查原因或者联系CheungSSH"
 	exit 1
 fi
+tar xvf /home/cheungssh/soft/redis-3.0.4.tar.gz -C /home/cheungssh/   &&
+cd /home/cheungssh/redis-3.0.4  &&  make
+if  [ $? -ne 0 ]
+then
+	echo "安装redis服务器失败了，请检查原因"
+	exit 1
+fi
 
 cd  /home/cheungssh/soft/ &&
 tar xvf django-redis-cache-1.6.3.tar.gz  &&
@@ -201,13 +208,6 @@ then
 fi
 
 
-tar xvf /home/cheungssh/soft/redis-3.0.4.tar.gz -C /home/cheungssh/   &&
-cd /home/cheungssh/redis-3.0.4  &&  make
-if  [ $? -ne 0 ]
-then
-	echo "安装redis服务器失败了，请检查原因"
-	exit 1
-fi
 
 while [ 1 ]
 do

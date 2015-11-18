@@ -19,7 +19,7 @@ def hostinfo(request):
                 for a in t_groupinfo['content'].values():
 			if a['group']==group:
 				try:
-					if a['owner']==username:
+					if a['owner']==username or request.user.is_superuser:
 						
 						host_in_group.append({"ip": "%s" % (a['ip']),"id":a["id"]})
 				except KeyError:
@@ -117,7 +117,7 @@ def groupinfo(request):
 		all_group=[]
 		for a in t_groupinfo['content'].values():
 			try:
-				if a['owner']==username:
+				if a['owner']==username  or request.user.is_superuser:
 					all_group.append(a['group'])
 			except KeyError:
 				pass

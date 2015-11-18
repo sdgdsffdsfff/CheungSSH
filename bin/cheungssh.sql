@@ -81,7 +81,7 @@ CREATE TABLE `auth_permission` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `content_type_id` (`content_type_id`,`codename`),
   KEY `auth_permission_e4470c6e` (`content_type_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=63 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=56 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -90,7 +90,7 @@ CREATE TABLE `auth_permission` (
 
 LOCK TABLES `auth_permission` WRITE;
 /*!40000 ALTER TABLE `auth_permission` DISABLE KEYS */;
-INSERT INTO `auth_permission` VALUES (25,'可执行命令',8,'excute_cmd'),(26,'执行脚本',8,'excutescript'),(27,'查看命令历史',8,'show_cmd_history'),(28,'查看操作记录',8,'show_access_page'),(29,'允许从PC上传文件',8,'local_file_upload'),(30,'允许PC下载文件',8,'local_file_download'),(31,'远程文件上传',8,'transfile_upload'),(32,'远程文件下载',8,'transfile_download'),(33,'查看文件传输记录',8,'transfile_history_show'),(34,'查看计划任务',8,'crond_show'),(35,'删除计划任务',8,'crond_del'),(36,'创建命令任务',8,'crond_create_cmd'),(37,'创建远程文件下载任务',8,'crond_create_transfile_download'),(38,'创建远程文件上传任务',8,'crond_create_transfile_upload'),(39,'秘钥上传',8,'transfile_keyfile'),(40,'删除秘钥',8,'key_del'),(41,'创建服务器',8,'config_add'),(42,'删除服务器',8,'config_del'),(43,'修改服务器',8,'config_modify'),(44,'查看服务器配置',8,'config_show'),(45,'查看脚本内容',8,'scriptfile_show'),(46,'创建脚本',8,'scriptfile_add');
+INSERT INTO `auth_permission` VALUES (25,'可执行命令',8,'excute_cmd'),(26,'查看命令历史',8,'show_cmd_history'),(27,'查看操作记录',8,'show_access_page'),(28,'允许从PC上传文件和密钥',8,'local_file_upload'),(29,'允许PC下载文件',8,'local_file_download'),(30,'远程文件上传',8,'transfile_upload'),(31,'远程文件下载',8,'transfile_download'),(32,'查看文件传输记录',8,'transfile_history_show'),(33,'查看计划任务',8,'crond_show'),(34,'删除计划任务',8,'crond_del'),(35,'创建计划任务',8,'crond_create'),(36,'秘钥上传',8,'transfile_keyfile'),(37,'删除秘钥',8,'key_del'),(38,'查看秘钥',8,'key_list'),(39,'创建服务器',8,'config_add'),(40,'删除服务器',8,'config_del'),(41,'修改服务器',8,'config_modify'),(42,'查看脚本内容',8,'scriptfile_show'),(43,'创建脚本',8,'scriptfile_add'),(44,'删除脚本',8,'scriptfile_del'),(45,'显示脚本清单',8,'scriptfile_list'),(46,'批量从web创建服务器',8,'batchconfig_web'),(47,'添加命令黑名单',8,'addblackcmd'),(48,'删除命令黑名单 ',8,'delblackcmd'),(49,'查看命令黑名单',8,'listblackcmd');
 /*!40000 ALTER TABLE `auth_permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -124,7 +124,7 @@ CREATE TABLE `auth_user` (
 
 LOCK TABLES `auth_user` WRITE;
 /*!40000 ALTER TABLE `auth_user` DISABLE KEYS */;
-INSERT INTO `auth_user` VALUES (1,'cheungssh','','','a@q.com','pbkdf2_sha256$10000$2obbA1GVker0$LWWHjMUhRz8AMiaL1hx4OrXsIMHmBxLaz5FctAnYz5U=',1,1,1,'2015-11-11 03:25:34','2015-11-11 02:10:38');
+INSERT INTO `auth_user` VALUES (1,'cheungssh','','','a@q.com','pbkdf2_sha256$10000$7xYyP8wYDPue$HbY1e0r1cSKVNgTukPmrFSbtpFs7F5aTykgggxt5S98=',1,1,1,'2015-11-17 12:53:38','2015-11-17 12:53:38');
 /*!40000 ALTER TABLE `auth_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -333,73 +333,6 @@ LOCK TABLES `django_admin_log` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `django_comment_flags`
---
-
-DROP TABLE IF EXISTS `django_comment_flags`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `django_comment_flags` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id` int(11) NOT NULL,
-  `comment_id` int(11) NOT NULL,
-  `flag` varchar(30) NOT NULL,
-  `flag_date` datetime NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `user_id` (`user_id`,`comment_id`,`flag`),
-  KEY `django_comment_flags_fbfc09f1` (`user_id`),
-  KEY `django_comment_flags_9b3dc754` (`comment_id`),
-  KEY `django_comment_flags_111c90f9` (`flag`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `django_comment_flags`
---
-
-LOCK TABLES `django_comment_flags` WRITE;
-/*!40000 ALTER TABLE `django_comment_flags` DISABLE KEYS */;
-/*!40000 ALTER TABLE `django_comment_flags` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `django_comments`
---
-
-DROP TABLE IF EXISTS `django_comments`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `django_comments` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `content_type_id` int(11) NOT NULL,
-  `object_pk` longtext NOT NULL,
-  `site_id` int(11) NOT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `user_name` varchar(50) NOT NULL,
-  `user_email` varchar(75) NOT NULL,
-  `user_url` varchar(200) NOT NULL,
-  `comment` longtext NOT NULL,
-  `submit_date` datetime NOT NULL,
-  `ip_address` char(15) DEFAULT NULL,
-  `is_public` tinyint(1) NOT NULL,
-  `is_removed` tinyint(1) NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `django_comments_e4470c6e` (`content_type_id`),
-  KEY `django_comments_6223029` (`site_id`),
-  KEY `django_comments_fbfc09f1` (`user_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `django_comments`
---
-
-LOCK TABLES `django_comments` WRITE;
-/*!40000 ALTER TABLE `django_comments` DISABLE KEYS */;
-/*!40000 ALTER TABLE `django_comments` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `django_content_type`
 --
 
@@ -413,7 +346,7 @@ CREATE TABLE `django_content_type` (
   `model` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `app_label` (`app_label`,`model`)
-) ENGINE=MyISAM AUTO_INCREMENT=14 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=11 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -422,7 +355,7 @@ CREATE TABLE `django_content_type` (
 
 LOCK TABLES `django_content_type` WRITE;
 /*!40000 ALTER TABLE `django_content_type` DISABLE KEYS */;
-INSERT INTO `django_content_type` VALUES (1,'permission','auth','permission'),(2,'group','auth','group'),(3,'user','auth','user'),(4,'content type','contenttypes','contenttype'),(5,'session','sessions','session'),(6,'cors model','corsheaders','corsmodel'),(7,'main_ conf','cheungssh','main_conf'),(8,'server conf','cheungssh','serverconf'),(9,'server info','cheungssh','serverinfo'),(10,'comment','comments','comment'),(11,'comment flag','comments','commentflag'),(12,'site','sites','site'),(13,'log entry','admin','logentry');
+INSERT INTO `django_content_type` VALUES (1,'permission','auth','permission'),(2,'group','auth','group'),(3,'user','auth','user'),(4,'content type','contenttypes','contenttype'),(5,'session','sessions','session'),(6,'cors model','corsheaders','corsmodel'),(7,'main_ conf','cheungssh','main_conf'),(8,'server conf','cheungssh','serverconf'),(9,'server info','cheungssh','serverinfo'),(10,'log entry','admin','logentry');
 /*!40000 ALTER TABLE `django_content_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -448,33 +381,7 @@ CREATE TABLE `django_session` (
 
 LOCK TABLES `django_session` WRITE;
 /*!40000 ALTER TABLE `django_session` DISABLE KEYS */;
-INSERT INTO `django_session` VALUES ('8e0a42f6090b2aa0b4c9cde5bb5b92b2','ZWUwZTllMGQ2NDkzYjcxMTVmNWRkZmI1MTg5YjVlOTE3NDQ4Y2NhNzqAAn1xAShVEl9hdXRoX3Vz\nZXJfYmFja2VuZHECVSlkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZHED\nVQ1fYXV0aF91c2VyX2lkcQSKAQF1Lg==\n','2015-11-25 03:25:34');
 /*!40000 ALTER TABLE `django_session` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `django_site`
---
-
-DROP TABLE IF EXISTS `django_site`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `django_site` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `domain` varchar(100) NOT NULL,
-  `name` varchar(50) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `django_site`
---
-
-LOCK TABLES `django_site` WRITE;
-/*!40000 ALTER TABLE `django_site` DISABLE KEYS */;
-INSERT INTO `django_site` VALUES (1,'example.com','example.com');
-/*!40000 ALTER TABLE `django_site` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -486,4 +393,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-11-11 11:27:03
+-- Dump completed on 2015-11-17 20:57:03
