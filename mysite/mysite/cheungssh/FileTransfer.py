@@ -8,7 +8,6 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 sys.path.append('/home/cheungssh/mysite')
 from django.core.cache import cache
 from mysite.cheungssh.models import ServerConf
-tmplogfile="/tmp/.cheungssh_file_trans.tmp"
 download_dir="/home/cheungssh/download/"
 from sftp_download_dir import cheungssh_sftp
 def set_progres(fid,filenum,ifile,isdir,transferred, toBeTransferred):

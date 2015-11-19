@@ -27,11 +27,6 @@ def cheungssh_index(request):
 def cheungssh_login(request):
 	info={"msgtype":"ERR","content":"","auth":"no"}
 	client_ip=request.META['REMOTE_ADDR']
-	print '登录:',client_ip
-	try:
-		print IP.find(client_ip)
-	except Exception,e:
-		print '不能解析IP'
 	limit_ip='fail.limit.%s'%(client_ip)
 	if cache.has_key(limit_ip):
 		if cache.get(limit_ip)>4:
@@ -297,7 +292,6 @@ def filetrans_remote_upload(request):
 	cache.set("info:%s" % (fid),redis_info,360)
 	username=request.user.username
 	FileTransfer.getconf(host,fid,username,"upload")
-	
 	info=json.dumps(info)
 	if callback is None:
 		info=info
@@ -600,7 +594,6 @@ def excutecmd(request):
 		Data=DataConf.DataConf()
 		a=threading.Thread(target=cheungssh_web.main,args=(cmd,ie_key,selectserver,Data))
 		a.start()
-		#info['msgtype']="OK"
 		
 		allconf=cache.get('allconf')
 		allconf_t=allconf['content']
@@ -624,6 +617,7 @@ def excutecmd(request):
 		fuck['go']=client_ip_locat
 		cmd_history.insert(0,cmd_history_t)
 		cache.set('cmd_history',cmd_history,8640000000)
+		info['msgtype']="OK"
 	except Exception,e:
 		print "发生错误",e
 		info['msgtype']='ERR'
