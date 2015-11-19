@@ -72,7 +72,7 @@ else
 fi
 /bin/rm -fr  /home/cheungssh/web/cheungssh 2>/dev/null
 cd /home/cheungssh/web/  &&
-tar xvf cheungssh.html.bz2
+tar xvf cheungssh.html.tgz
 if  [ $? -ne 0 ]
 then
 	echo  "解压失败"
