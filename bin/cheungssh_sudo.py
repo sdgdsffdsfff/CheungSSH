@@ -2,8 +2,10 @@
 #Author=Cheung Kei-Chuen
 #QQ=2418731289
 import paramiko,os,sys,re,Format_Char_Show_web,time,sendinfo,random,json
-
-def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,sudopassword,Data):
+import json
+from django.core.cache import cache
+from redis_to_redis import set_redis_data
+def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,sudopassword,Data,tid):
 	bufflog=''
 	start_time=time.time()
 	ResultSum=''
@@ -95,7 +97,7 @@ def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,s
 			buff=''
 			ResultSum=buff + "sudo %s" % (info)
 		
-		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+ip,color_status)
+		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+'\n'+ip,color_status)
 		Show_Result=ResultSum + '\n' #+ResultSum_count
 		jindu=int(float(Data.All_Servers_num)/float(Data.All_Servers_num_all)*100)
 		TmpShow=Format_Char_Show_web.Show_Char(Show_Result+" 命令: "+cmd,color_status)
@@ -145,3 +147,4 @@ def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,s
 				hwinfo[ip][Data.hwtype]=ResultSum
 				
 		cache.set('hwinfo',hwinfo,864000000)
+	set_redis_data('cmd.%s.%s'%(tid,ip),json.dumps(ResultSum,encoding="utf-8",ensure_ascii=False))

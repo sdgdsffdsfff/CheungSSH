@@ -5,6 +5,7 @@
 V=2.0.1
 #如果您在使用过程中，遇到了一点点的问题，我都真诚希望您能告诉我！为了改善这个软件， 方便您的工作#
 
+trap "echo 'CheungSSH官方QQ群: 445342415'"
 cat  <<EOFshow
 CheungSSH环境安装如下:
 os: centos 5系列   
@@ -32,7 +33,7 @@ django-redis-cache
 pycrypto-on-pypi 
 mod_python
 EOFshow
-read -p  '请知悉以上，然后按Enter继续...'
+read -p  '请知悉以上，然后按Enter继续...' T
 
 export LANG=zh_CN.UTF-8
 if [ `id -u` -ne 0 ]
@@ -48,6 +49,7 @@ echo  "开始安装......"
 cp_file(){
 setenforce 0
 useradd cheungssh -d /home/cheungssh  -s /sbin/nologin 2>/dev/null #该目录是cheungssh的工作目录， 必须创建
+mkdir /home/cheungssh 2>/dev/null
 echo "正在复制文件..."
 if [ `dirname $0` == "." ]
 then
@@ -283,6 +285,10 @@ EOF
 			echo "Django配置数据库错误，请检查配置"
 			exit 1
 		fi
+		if [ -f /etc/init.d/mysql ] && [ ! -f /etc/init.d/mysqld ]
+		then
+			/bin/mv /etc/init.d/mysql /etc/init.d/mysqld
+		fi
 	else
 		echo "为您自动安装Mysql服务器..."
 		yum install mysql-server -y --skip-broken
@@ -481,14 +487,25 @@ case  $1 in
 	install)
 		if  [ `echo  "import platform;print platform.dist()[0]"|python` == "Ubuntu" ]
 		then
-			echo "暂不支持Ubuntu"
+			cp_file
+			bash /home/cheungssh/bin/install-CheungSSH.sh.ubuntu
 			exit 1
 		fi
 		cp_file
 		main_install
 		;;
 	update)
+		/bin/cp -f  /home/cheungssh/conf/appendonly.aof  /tmp/appendonly.aof
+		/bin/cp -f  /home/cheungssh/conf/dump.rdb /tmp/dump.rdb
 		update
+		/bin/mv /tmp/appendonly.aof /home/cheungssh/conf/appendonly.aof &&
+		/bin/mv /tmp/dump.rdb       /home/cheungssh/conf/dump.rdb
+		if [ $? -ne 0 ]
+		then
+			echo  "更新数据文件失败"
+			exit 1
+		fi
+		echo  "更新完成"
 		;;
 	*)
 		echo "用法 sh $0 update|install"
@@ -498,3 +515,4 @@ esac
 #delete  from auth_permission where  name like 'Can%';
 chmod a+x -R /home/cheungssh/bin/
 chown cheungssh.cheungssh -R /home/cheungssh
+trap - EXIT

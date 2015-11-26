@@ -9,7 +9,9 @@ sys.path.append("/home/cheungssh/mysite/mysite/cheungssh/")
 import paramiko,threading,time,commands,re,Format_Char_Show_web,shutil,random,json,sendinfo,key_resolv
 from mysite.cheungssh.models import ServerConf
 from django.core.cache import cache
-def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data):
+import json
+from redis_to_redis import set_redis_data
+def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data,tid):
 	PROFILE=". /etc/profile 2&>/dev/null;. ~/.bash_profile 2&>/dev/null;. /etc/bashrc 2&>/dev/null;. ~/.bashrc 2&>/dev/null;"
 	PATH="export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin;"
 	start_time=time.time()
@@ -109,7 +111,8 @@ def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data)
 		hwinfo[ip][Data.hwtype]=ResultSum
 		hwinfo[ip]['checktime']=checktime
 		cache.set('hwinfo',hwinfo,864000000)
-def main(cmd,ie_key,selectserver,Data,excutetype='cmd',hwtype='CPU'):
+	set_redis_data('cmd.%s.%s'%(tid,ip),json.dumps(ResultSum,encoding="utf-8",ensure_ascii=False))
+def main(cmd,ie_key,selectserver,Data,tid,excutetype='cmd',hwtype='CPU'):
 	Data.excutetype=excutetype
 	Data.hwtype=hwtype
 	Data.FailIP=[]
@@ -132,11 +135,11 @@ def main(cmd,ie_key,selectserver,Data,excutetype='cmd',hwtype='CPU'):
 		else:
 			keyfile='N'
 		if Data.conf[id]["su"]=="Y" and excutetype=='cmd' :
-			b=threading.Thread(target=cheungssh_su.Excute_suroot,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data.conf[id]["supassword"],Data))
+			b=threading.Thread(target=cheungssh_su.Excute_suroot,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data.conf[id]["supassword"],Data,tid))
 		elif Data.conf[id]["sudo"]=="Y" and excutetype=='cmd':
-			b=threading.Thread(target=cheungssh_sudo.Excute_sudo,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data.conf[id]["sudopassword"],Data))
+			b=threading.Thread(target=cheungssh_sudo.Excute_sudo,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data.conf[id]["sudopassword"],Data,tid))
 		else:
-			b=threading.Thread(target=SSH_cmd,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data))
+			b=threading.Thread(target=SSH_cmd,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data,tid))
 		b.start()
 	b.join()
 if __name__=='__main__':

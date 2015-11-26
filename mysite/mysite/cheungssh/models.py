@@ -50,6 +50,7 @@ class ServerConf(models.Model):
 				("addblackcmd","添加命令黑名单"),
 				("delblackcmd","删除命令黑名单 "),
 				("listblackcmd","查看命令黑名单"),
+				("show_sign_record","查看登录记录"),
 
 			)
 	def __unicode__(self):

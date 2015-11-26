@@ -1,4 +1,5 @@
 #coding:utf-8
+from django.contrib.auth.models import User
 from django.http import  HttpResponse,HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.contrib.auth import authenticate,login,logout
@@ -20,12 +21,15 @@ from django.views.generic.base import View
 import login_check
 import db_to_redis_allconf
 from page_list import page_list
+from page_list_new import pagelist
 crond_file="/home/cheungssh/crond/crond_file"
 cmdfile="/home/cheungssh/data/cmd/cmdfile"
+import redis_to_redis
 def cheungssh_index(request):
 	return render_to_response("cheungssh.html")
 def cheungssh_login(request):
 	info={"msgtype":"ERR","content":"","auth":"no"}
+	logintime=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
 	client_ip=request.META['REMOTE_ADDR']
 	limit_ip='fail.limit.%s'%(client_ip)
 	if cache.has_key(limit_ip):
@@ -37,18 +41,20 @@ def cheungssh_login(request):
 			info=json.dumps(info)
 			return HttpResponse(info)
 	if request.method=="POST":
-		username = request.POST.get("username", False)
+		username = request.POST.get("username", '非法用户名')
 		password = request.POST.get("password", False)
 		print username,password,request.POST
 		user=authenticate(username=username,password=password)
 		if user is not None:
 			if user.is_active:
 				print "成功登陆"
+				
 				login(request,user)
 				request.session["username"]=username
 				info["msgtype"]="OK"
 				info['auth']="yes"
-				request.session.set_expiry(0)
+				info['content']="成功登录"
+				request.session.set_expiry(0)    
 				if cache.has_key(limit_ip):cache.delete(limit_ip)
 				print request.COOKIES,request.session.keys(),request.session['_auth_user_id']
 				info['sid']=str(request.session.session_key)
@@ -62,23 +68,37 @@ def cheungssh_login(request):
 			else:
 				cache.set(limit_ip,1,3600)
 			info["content"]="用户名或密码错误"
-			print info["content"]
-			
-			
+		info["IP"]=client_ip
+		info["IP-Locate"]=IP.find(client_ip)
+		info["username"]=username
+		info["logintime"]=logintime
+		redis_to_redis.set_redis_data('sign.record',json.dumps(info,encoding='utf-8',ensure_ascii=False)) 
+		
 	else:
-		try:
-			info["content"]="No Get"
-		except Exception,e:
-			print '错误',e
-	info=json.dumps(info)
+		info["content"]="No Get"
+	info=json.dumps(info,encoding="utf-8",ensure_ascii=False)
 	response=HttpResponse(info)
 	response["Access-Control-Allow-Origin"] = "*"
         response["Access-Control-Allow-Methods"] = "POST"
         response["Access-Control-Allow-Credentials"] = "true"
         return response
-	info=json.dumps(info)
-	print info
-	return HttpResponse(info)
+@login_check.login_check('登录记录',False)
+@permission_check('show_sign_record')
+def show_sign_record(request):
+	callback=request.GET.get('callback')
+	datainfo=redis_to_redis.get_redis_data('sign.record','list')  
+	info=pagelist(request,datainfo["content"])
+	info=json.dumps(info,encoding="utf-8",ensure_ascii=False)
+	
+	if callback is None:
+		info=info
+	else:
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+        response["Access-Control-Allow-Methods"] = "POST"
+        response["Access-Control-Allow-Credentials"] = "true"
+        return response
 def cheungssh_logout(request):
 	info={'msgtype':'OK'}
 	if request.user.is_authenticated():
@@ -322,12 +342,10 @@ def pathsearch(request):
 @login_check.login_check('配置修改')
 @permission_check('cheungssh.config_modify')
 def config_modify(request):
-	print 111122
 	callback=request.POST.get('callback')
 	host=request.POST.get('host')
 	username=request.user.username
 	info={'msgtype':'ERR'}
-	print 77777
 	try:
 		host=eval(host)
 		if not type({})==type(host):
@@ -339,8 +357,8 @@ def config_modify(request):
 			for b in host.keys():
 				if b=="ip":
 					host[b]==host['ip'].split('@')[-1]
-				if b=='id' or b=="owner" or not host[b]:
-					print '跳过'
+				if b=='id'  or not host[b]:
+					
 					continue
 				else:
 					t_allgroupall['content'][id][b]=host[b]
@@ -454,7 +472,7 @@ def delcrondlog(request):
 def showcrondlog(request):
 	callback=request.GET.get('callback')
 	info={"msgtype":"OK","content":""}
-	crondlog_log=crond_record.crond_show()[1]
+	crondlog_log=crond_record.crond_show(request)[1]
 	info['content']=crondlog_log
 	info=json.dumps(info,encoding='utf-8')
 	if callback is None:
@@ -507,7 +525,8 @@ def crontab(request):
 						info['msgtype']='OK'
 						crond_record.crond_record(value_to_log)
 					else:
-						print "加入计划任务失败",crond_write[1],crond_write[0]
+						delcmd=commands.getstatusoutput("""sed -i '/%s/d' %s"""  % (fid,crond_file))
+						print delcmd,11111111111
 						info['content']=crond_write[1]
 					print 'Runtime: ',runtime
 				elif runtype=="cmd":
@@ -531,6 +550,7 @@ def crontab(request):
 									crond_record.crond_record(value_to_log) 
 								else:
 									print "加入计划任务失败",crond_write[1],crond_write[0]
+									delcmd=commands.getstatusoutput("""sed -i '/%s/d' %s"""  % (fid,crond_file))
 									info['content']=crond_write[1]
 							except Exception,e:
 								info['content']=str(e)
@@ -587,35 +607,31 @@ def excutecmd(request):
 	client_ip_locat=IP.find(client_ip)
 	username=request.user.username
 	try:
+		tid=str(random.randint(90000000000000000000,99999999999999999999))
 		server=eval(cmd)
 		cmd=server['cmd']
 		selectserver=server['selectserver']
 		if not selectserver:raise IOError("没有选择执行主机")
 		Data=DataConf.DataConf()
-		a=threading.Thread(target=cheungssh_web.main,args=(cmd,ie_key,selectserver,Data))
+		a=threading.Thread(target=cheungssh_web.main,args=(cmd,ie_key,selectserver,Data,tid))
 		a.start()
 		
-		allconf=cache.get('allconf')
-		allconf_t=allconf['content']
-		server_ip_all=[]
-		for sid in selectserver.split(','):
-			server_ip=allconf_t[sid]['ip']
-			server_ip_all.append(server_ip)
 		cmd_history=cache.get('cmd_history')
 		if cmd_history is None:cmd_history=[]
-		tid=str(random.randint(90000000000000000000,99999999999999999999))
-		cmd_history_t={
-				"tid":tid,
-				"excutetime":excute_time,
-				"IP":client_ip,
-				"IPLocat":client_ip_locat,
-				"user":username,
-				"servers":server_ip_all,
-				"cmd":cmd
-			}
-		fuck={}
-		fuck['go']=client_ip_locat
-		cmd_history.insert(0,cmd_history_t)
+		allconf=cache.get('allconf')
+		allconf_t=allconf['content']
+		for sid in selectserver.split(','):
+			server_ip=allconf_t[sid]['ip'] 
+			cmd_history_t={
+					"tid":tid,
+					"excutetime":excute_time,
+					"IP":client_ip,
+					"IPLocat":client_ip_locat,
+					"user":username,
+					"servers":server_ip,
+					"cmd":cmd
+				}
+			cmd_history.insert(0,cmd_history_t)
 		cache.set('cmd_history',cmd_history,8640000000)
 		info['msgtype']="OK"
 	except Exception,e:
@@ -635,38 +651,31 @@ def excutecmd(request):
 @login_check.login_check('',False)
 @permission_check('cheungssh.show_cmd_history')
 def cmdhistory(request):
-	username=request.user.username
-	info={'msgtype':'OK','content':[]}
 	callback=request.GET.get('callback')
-	pagenum=request.GET.get('pagenum')
-	pagesize=request.GET.get('pagesize')
 	cmd_history=cache.get('cmd_history')
-	if  cmd_history:
-		pagenum=int(pagenum)  
-		pagesize=int(pagesize)  
-		endpage=pagesize*pagenum+1
-		if pagenum==1:
-			startpage=pagesize*(pagenum-1) 
-			endpage=pagesize*pagenum
-		else:
-			endpage=pagesize*pagenum+1   
-			startpage=pagesize*(pagenum-1)+1  
-		cmd_history_t=cmd_history[startpage:endpage]
-		cmd_history=[]
-		for t in cmd_history_t:  
-			if username==t["user"] or request.user.is_superuser:
-				cmd_history.append(t)
-		info['content']=cmd_history
-		totalnum=len(cmd_history)
+	if not  cmd_history:
+		info={"msgtype":"OK","content":[],"totalnum":0}
 	else:
-		totalnum=0
-	info['totalnum']=totalnum
-	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
+		info=pagelist(request,cmd_history)
+	for t in info["content"]: 
+		cmd_result_id="cmd.%s.%s" % (t['tid'],t['servers'])
+		if cmd_result_id is None:continue
+		cmd_result=redis_to_redis.get_redis_data(cmd_result_id,'list')['content']
+		info["content"].remove(t)
+		t["result"]=re.sub("""\\"|\\'""",'',"</br>".join(cmd_result))
+		print type(cmd_result)
+		info["content"].append(t)  
+	info=json.dumps(info,encoding="utf-8",ensure_ascii=False)
 	if callback is None:
 		info=info
 	else:
 		info="%s(%s)"  % (callback,info)
-	return HttpResponse(info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response
+
 
 @login_check.login_check()
 def get_hwinfo(request):
@@ -699,13 +708,14 @@ def operation_record(request):
 		else:
 			endpage=pagesize*pagenum+1   
 			startpage=pagesize*(pagenum-1)+1  
-		query_get_login_tmp=get_login_record[startpage:endpage]  
-		query_get_login=[]
-		for t in query_get_login_tmp:  
+		#query_get_login_tmp=get_login_record[startpage:endpage]  
+		query_get_login_all=[]
+		for t in get_login_record:  
 			if username==t["username"] or request.user.is_superuser:
-				query_get_login.append(t)
-		info['content']=query_get_login
-		totalnum=len(query_get_login)
+				query_get_login_all.append(t)
+		
+		info['content']=query_get_login_all[startpage:endpage]
+		totalnum=len(query_get_login_all)
 	else:
 		totalnum=0
 	info['totalnum']=totalnum
@@ -911,7 +921,7 @@ def batchconfig_web(request):
 			tconf={
 				"id":id,
 				"ip":confline[0],
-				"port":confline[1],
+				"port":int(confline[1]),
 				"group":confline[2],
 				"username":confline[3],
 				"loginmethod":confline[4],
@@ -921,7 +931,8 @@ def batchconfig_web(request):
 				"sudopassword":confline[8],
 				"su":confline[9],
 				"supassword":confline[10],
-				"owner":username
+				"owner":username,
+				"descript":configline[12]
 				} 
 			
 			batchallconf[id]=tconf 
@@ -1013,6 +1024,27 @@ def del_black_cmd(request):
 	except Exception,e:
 		print '发生了错误',e
 		info["content"]=str(e)
+	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
+	if callback is None:
+		info=info
+	else:
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response
+
+@login_check.login_check('查看系统所有用户',False)
+def getalluser(request):
+	info={"msgtype":"ERR"}
+	callback=request.GET.get('callback')
+	sysuser=[]    
+	userdata=User.objects.all()
+	for a in userdata:
+		sysuser.append(a.username)
+	info["msgtype"]="OK"
+	info["content"]=sysuser
 	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
 	if callback is None:
 		info=info

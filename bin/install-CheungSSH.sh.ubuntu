@@ -5,7 +5,7 @@
 V=2.0.1
 #如果您在使用过程中，遇到了一点点的问题，我都真诚希望您能告诉我！为了改善这个软件， 方便您的工作#
 
-echo  <<EOFshow
+cat  <<EOFshow
 #CheungSSH环境安装如下:
 #os: centos 5系列   
 #os: centos 6系列 
@@ -46,48 +46,14 @@ echo  "开始安装......"
 
 
 
-ubuntu_install(){
-	echo  "使用Apt-get安装..."
+	echo  "使用apt-get安装..."
 	apt-get install  -y `echo  "import sys;print 'python%s-dev'%sys.version[:3]"|python`
-	apt-get install  -y gcc  openssl-dev libmysqld-dev  swig httpd httpd-devel python-pip libevent-devel 
+	apt-get install  -y gcc  libssl-dev libmysqld-dev  swig apache2 apache2-dev python-pip libevent-dev
 	if  [ $? -ne 0 ]
 	then
-		echo "安装失败,重试中...."
-		echo  "更新Yum...."
-		/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
-		yum clear all && yum makecache
-		echo  "重装yum..."
-		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel  --skip-broken
-		if  [ $? -ne 0 ]
-		then
-			echo  "Yum安装又失败了"
+			echo  "apt-get安装失败了"
 			exit 1
-		fi
 	fi
-	if [ `rpm -qa|grep -Eo 'gcc|python-devel|openssl-devel|mysql-devel|swig|httpd|httpd-devel|libevent-devel'|sort|uniq|wc -l` -lt 8 ]
-	then
-		echo  "更新Yum...."
-		/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
-		yum clear all && yum makecache
-		echo  "重装yum..."
-		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel --skip-broken
-		if [ `rpm -qa|grep -Eo 'gcc|python-devel|openssl-devel|mysql-devel|swig|httpd|httpd-devel|libevent-devel'|sort|uniq|wc -l` -lt 8 ]
-		then
-			echo "有些包不能安装上...如下:"
-			a="gcc python-devel openssl-devel mysql-devel swig httpd httpd-devel libevent-devel"
-			for b in $a
-			do
-				rpm -qa|grep $b
-				if  [ $? -ne 0 ]
-				then
-					echo "$b 不存在"
-					exit 1
-				fi
-			done
-			exit
-		fi
-	fi
-	
 	which pip
 	if [ $? -ne 0 ]
 	then
@@ -129,7 +95,7 @@ import sys,os
 try:
 	import paramiko
 except AttributeError:
-	os.system("""sed  -i '/You should rebuild using libgmp/d;/HAVE_DECL_MPZ_POWM_SEC/d'  /usr/lib*/python*/site-packages/Crypto/Util/number.py   /usr/lib*/python*/site-packages/pycrypto*/Crypto/Util/number.py""")
+	os.system("""sed  -i '/You should rebuild using libgmp/d;/HAVE_DECL_MPZ_POWM_SEC/d'  /usr/*/*/python*/dist-packages/Crypto/Util/number.py""")
 except:
         sys.exit(1)
 EOFparamiko
@@ -205,20 +171,18 @@ EOF
 			echo "Django配置数据库错误，请检查配置"
 			exit 1
 		fi
+		sed  -i  's/mysqld/mysql/g' /home/cheungssh/bin/cheungssh-service.sh
 	else
 		echo "为您自动安装Mysql服务器..."
-		yum install mysql-server -y --skip-broken
+		apt-get  install  -y mysql-server
 		if [ $? -ne 0 ]
 		then
 			echo "安装mysql失败,请检查原因"
 			exit 1
 		fi
 		echo -e "Mysql服务器已经安装完毕\n正在尝试启动Mysql服务器..."
-		if [ -f /etc/init.d/mysql ] && [ ! -f /etc/init.d/mysqld ]
-		then
-			/bin/mv /etc/init.d/mysql /etc/init.d/mysqld
-		fi
-		/etc/init.d/mysqld restart
+		sed  -i  's/mysqld/mysql/g' /home/cheungssh/bin/cheungssh-service.sh
+		/etc/init.d/mysql restart
 		if  [ $? -ne 0 ]
 		then
 			echo "启动Mysql失败，请检查原因"
@@ -226,7 +190,7 @@ EOF
 		else
 			echo "已经启动Mysql服务器"
 		fi
-		echo  "修改mysql root的密码为zhang"
+		read -p   "请输入mysql密码 (将修改为zhang): "
 		if [ `mysqladmin -uroot password zhang` -ne 0 ]
 		then
 			echo "修改mysql数据库密码失败，请检查原因，比如初始密码是否不是空的."
@@ -253,8 +217,8 @@ EOF
 		echo "初始化数据库完成"
 	fi
 	
-	APXS=`which apxs`
-	APXS=${APXS:-/usr/sbin/apxs}
+	APXS=`which apxs2`
+	APXS=${APXS:-/usr/bin/apxs2}
 	if [ ! -f $APXS ]
 	then
 		echo  "没有apxs文件"
@@ -273,34 +237,60 @@ EOF
 		exit 1
 	fi
 	
-	/bin/cp /home/cheungssh/conf/version.py $(dirname `find   /usr/lib*/python*/site-packages/mod_python  -type f -name version.py`)
+	/bin/cp /home/cheungssh/conf/version.py $(dirname `find   /usr/*/*/python*/dist-packages/mod_python  -type f -name version.py`)
 	if  [ $? -ne 0 ]
 	then
 		echo "修改mod_python失败，请检查原因"
 		exit 1
 	fi
 	
-	/bin/cp  /home/cheungssh/conf/httpd.conf /etc/httpd/conf/httpd.conf
+	#/bin/cp  /home/cheungssh/conf/httpd.conf /etc/apache2/apache2.conf
+	cat >>/etc/apache2/apache2.conf <<EOFapache
+LoadModule python_module /home/cheungssh/soft/mod_python-3.4.1/src/.libs/mod_python.so
+<Location "/">
+        SetHandler python-program
+        PythonPath "['/home/cheungssh/mysite/'] + sys.path"
+        PythonHandler django.core.handlers.modpython
+        SetEnv DJANGO_SETTINGS_MODULE mysite.settings
+        PythonDebug On
+</Location>
+Alias /cheungssh/static /home/cheungssh/web/cheungssh/static/
+<Location "/cheungssh/static">
+        SetHandler None
+</Location>
+Alias /cheungssh/download/file  "/home/cheungssh/download/"
+<Location "/cheungssh/download/file">
+        SetHandler None
+</Location>
+Alias /static  "/home/cheungssh/web/cheungssh/static/admin/"
+<Location "/static">
+        SetHandler None
+</Location>
+EOFapache
 	if  [ $? -ne 0 ]
 	then
 		echo "复制Apache配置文件失败，请检查原因"
 		exit 1
 	fi
-	sed -i  "/^Listen/d" /etc/httpd/conf/httpd.conf  &&
-	echo "Listen $port" >> /etc/httpd/conf/httpd.conf
+	sed  -i "s/httpd/apache2/g"  /home/cheungssh/bin/cheungssh-service.sh   &&
+	sed -i  "/^Listen/d"   /etc/apache2/ports.conf  &&
+	echo  "Listen $port" >> /etc/apache2/ports.conf &&
+	sed  -i  -e '/^User/d;/^Group/d' /etc/apache2/apache2.conf  &&
+	echo  -e "User cheungssh\nGroup cheungssh" >>/etc/apache2/apache2.conf &&
 	if  [ $? -ne 0 ]
 	then
-		echo "修改配置失败,请检查原因"
+		echo  "配置apahce失败"
 		exit 1
 	fi
 	
-	chown -R  root.cheungssh /etc/httpd/ 2>/dev/null
+	chown -R  cheungssh.cheungssh /etc/apache2/ 2>/dev/null
 	chown -R cheungssh.cheungssh /home/cheungssh
 	if [ $? -ne 0 ]
 	then
 		echo "赋权失败 ，请检查目录是否正确"
 		exit
 	fi
+	#mv /etc/init.d/apache2 /etc/init.d/httpd
 	sh /home/cheungssh/bin/cheungssh-service.sh start
 	if  [ $? -ne 0 ]
 	then
@@ -318,105 +308,7 @@ EOF
 
 		启动CheungSSH服务: /home/cheungssh/bin/cheungssh-service.sh start"
 	###
-	exit 
 	
-}
 
-
-update(){
-	cp_file
-		read  -p  '请指定mysql服务器IP : (默认127.0.0.1)' mip
-		read -p '请指定mysql登录账户名 (默认root)' musername
-		read -p  "请您输入您的mysql登录密码 "  mpassword
-		read -p  '请指定mysql端口 (默认3306)' mp
-		echo  "测试登录..."
-		mip=${mip:-localhost}
-		musername=${musername:-root}
-		mp=${mp:-3306}
-		mcmd="mysql -h${mip} -u${musername}  -p${mpassword} -P${mp}"
-		if [[ -z $mpassword ]]
-		then
-			mysql  -h${mip} -u${musername}  -P${mp}  <<EOF
-show databases;
-EOF
-		else
-			mysql  -h${mip} -u${musername}  -p${mpassword} -P${mp}  <<EOF
-show databases;
-EOF
-		fi
-		if  [ $? -ne 0 ]
-		then
-			echo  $mcmd
-			echo "登录mysql失败，请检查原因， 比如用户名密码是否正确，服务器端口，IP是否正确"
-			exit 1
-		else
-			echo "Mysql配置正确"
-		fi
-		sed -i  "s/'USER': 'root'/'USER': '$musername'/g"                /home/cheungssh/mysite//mysite/settings.py  &&
-		sed -i  "s/'PASSWORD': 'zhang'/'PASSWORD': '$mpassword'/g"     /home/cheungssh/mysite//mysite/settings.py  &&
-		sed -i  "s/'HOST': 'localhost'/'HOST': '$mip'/g"             /home/cheungssh/mysite//mysite/settings.py  &&
-		sed -i  "s/'PORT': '3306'/'PORT': '$mp'/g"     /home/cheungssh/mysite//mysite/settings.py
-		if  [ $? -ne 0 ]
-		then
-			echo "Django配置数据库错误，请检查配置"
-			exit 1
-		fi
-	#创建cheungssh数据库
-	mysql -uroot -h${mip} -u${musername} -p${mpassword} -P${mp} -e 'create database if not exists cheungssh  default charset utf8'
-	if  [ $? -ne 0 ]
-	then
-		echo "连接数据库错误,请检查原因，端口， 密码， IP是否正确？您是否已经有Mysql服务器？"
-		exit 1
-	fi
-	mysql -uroot -h${mip} -u${musername} -p${mpassword} -P${mp} cheungssh < /home/cheungssh/bin/cheungssh.sql
-	if  [ $? -ne 0 ]
-	then
-		echo "初始化数据库失败，请检查原因"
-		exit 1
-	else
-		echo "初始化数据库完成"
-	fi
-	echo   -e "更新完毕，请执行 /home/cheungssh/bin/cheungssh-service.sh restart 重启生效\n\t请清除浏览器缓存重新登录"
-	echo -e "数据库密码已经恢复初始账号密码，请用账号密码:\n\tcheungssh\n\tcheungssh\n\t登录"
-}
-main_install(){
-cat <<EOFver|python
-#coding:utf-8
-import sys,time
-ver=float(sys.version[:3])
-if ver<=2.4:
-	print "强烈警告! 您使用的python版本过低,建议升级python版本到2.4以上.\n可以使用yum update python更新"
-	sys.exit(1)
-EOFver
-read -p  "强烈建议您使用yum(Centos)安装CheungSSH,本地软件包安装极为繁琐 (Enter键继续) " haha
-read -p  '是否通过Yum网络安装软件包？(y/n) ' netinstall
-netinstall=${netinstall:-y}
-echo $netinstall|grep -iE '^n' -q
-if [ $? -ne 0 ]
-then
-	yum_install
-else
-	sh /home/cheungssh/bin/install-CheungSSH.sh.local
-fi
-}
-case  $1 in
-	install)
-		if  [ `echo  "import platform;print platform.dist()[0]"|python` == "Ubuntu" ]
-		then
-			echo "暂不支持Ubuntu"
-			exit 1
-		fi
-		cp_file
-		main_install
-		;;
-	update)
-		update
-		;;
-	*)
-		echo "用法 sh $0 update|install"
-		exit 1
-		;;
-esac
-#delete  from auth_permission where  name like 'Can%';
 chmod a+x -R /home/cheungssh/bin/
 chown cheungssh.cheungssh -R /home/cheungssh

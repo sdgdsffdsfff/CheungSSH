@@ -1,6 +1,11 @@
 #coding:utf-8
 import os,sys,time,paramiko,Format_Char_Show_web,re,random,json,sendinfo
-def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,rootpassword,Data):
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+sys.path.append('/home/cheungssh/mysite')
+from django.core.cache import cache
+import json
+from redis_to_redis import set_redis_data
+def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,rootpassword,Data,tid):
 	bufflog=''
 	start_time=time.time()
 	ResultSum=''
@@ -69,8 +74,9 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 			
 			ResultSum=buff + "Su Failed (Password Error)"
 		print 'color:',color_status
-		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+ip,color_status)
+		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+'\n'+ip,color_status)
 		print 'color:',color_status
+		ssh.close()
 	except Exception,e:
 		color_status=1
 		Data.All_Servers_num += 1
@@ -79,8 +85,6 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 		ResultSum=str(e)
 		bufflog=str(e)
 		Show_Result_web_status=Format_Char_Show_web.Show_Char(str(e).replace("<","&lt;")+"\n"+ip,color_status)
-	finally:
-		ssh.close()
 	jindu=int(float(Data.All_Servers_num)/float(Data.All_Servers_num_all)*100)
 	if color_status==0:
 		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"OK","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
@@ -106,3 +110,5 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 				hwinfo[ip]=ipinfo
 				hwinfo[ip][Data.hwtype]=ResultSum
 		cache.set('hwinfo',hwinfo,864000000)
+	
+	set_redis_data('cmd.%s.%s'%(tid,ip),json.dumps(ResultSum,encoding="utf-8",ensure_ascii=False))

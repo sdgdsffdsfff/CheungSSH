@@ -19,13 +19,12 @@ def page_list(request,keyrecord):
                 else:
                         endpage=pagesize*pagenum+1   
                         startpage=pagesize*(pagenum-1)+1  
-                key_list_t=key_list[startpage:endpage]
-                key_list=[]
-                for t in key_list_t:  
+                key_list_all=[]
+                for t in key_list:  
                         if username==t["owner"] or request.user.is_superuser:
-                                key_list.append(t)
-                info['content']=key_list
-                totalnum=len(key_list)
+                                key_list_all.append(t)
+                info['content']=key_list_all[startpage:endpage]
+                totalnum=len(key_list_all)
         else:
                 totalnum=0
         info['totalnum']=totalnum
