@@ -51,6 +51,10 @@ class ServerConf(models.Model):
 				("delblackcmd","删除命令黑名单 "),
 				("listblackcmd","查看命令黑名单"),
 				("show_sign_record","查看登录记录"),
+				("show_ip_limit","查看锁定的IP记录"),
+				("del_ip_limit","删除锁定的IP记录"),
+				("show_threshold",'查看登陆失败次数阈值'),
+				("set_threshold","设置登录失败次数阈值"),
 
 			)
 	def __unicode__(self):

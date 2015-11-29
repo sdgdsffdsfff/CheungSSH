@@ -3,6 +3,7 @@
 import os,sys
 reload(sys)
 sys.setdefaultencoding('utf8')
+from redis_to_redis import set_redis_data
 import socket,json
 def sendinfo(info):
 	try:

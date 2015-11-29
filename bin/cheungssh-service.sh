@@ -18,8 +18,17 @@ start(){
 		if [ ! -e  $dest_mysql_sock ]
 		then
 			mkdir  -p /var/lib/mysql/ 2>/dev/null;chown mysql.mysql /var/lib/mysql/
-			mysql_sock=`grep  -E '^ *socket.*mysql.sock' /etc/my.cnf|awk  -F  '=' 'NR==1{print  $NF}'` &&
-			ln -s $mysql_sock  $dest_mysql_sock
+			if [ -f /etc/my.cnf ]
+			then
+				cnf="/etc/my.cnf"
+			else
+				cnf="/etc/mysql/my.cnf"
+			fi
+			mysql_sock=`grep  -E '^ *socket.*mysql.sock' $cnf|awk  -F  '=' 'NR==1{print  $NF}'`
+			if [ ! -e $dest_mysql_sock ]
+			then
+				ln -s $mysql_sock  $dest_mysql_sock
+			fi
 			
 		fi
 		if [ $? -ne 0 ]
