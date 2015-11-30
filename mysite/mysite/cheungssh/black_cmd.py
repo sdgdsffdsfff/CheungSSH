@@ -11,12 +11,18 @@ def black_cmd_check(func):
 			callback=request.GET.get('callback')
 			servers=request.GET.get('cmd') 			
 			force=request.GET.get('force')
+<<<<<<< HEAD
 			script=False
+=======
+>>>>>>> origin/master
 		else:
 			callback=request.POST.get('callback')
 			servers=request.POST.get('cmd') 			
 			force=request.POST.get('force')
+<<<<<<< HEAD
 			script=request.POST.get('script')
+=======
+>>>>>>> origin/master
 			
 		try:
 			servers=eval(servers)
@@ -27,7 +33,11 @@ def black_cmd_check(func):
 		t_cmd=re.sub('^ *| *$','',cmd) 
 		t_cmd=re.sub(' +','_',t_cmd)  
 		for c in black_cmd_list:
+<<<<<<< HEAD
 			if re.search(c['cmd'],t_cmd) and not script:  
+=======
+			if re.search(c['cmd'],t_cmd):
+>>>>>>> origin/master
 				if not request.user.is_superuser:     
 					info['content']='该命令已被阻止 并且被审计!'   
 				elif request.user.is_superuser and  force is None:
