@@ -47,4 +47,8 @@ urlpatterns = patterns('',
 	url(r'^cheungssh/listblackcmd/$','mysite.cheungssh.cheungssh.list_black_cmd'),
 	url(r'^cheungssh/showsignrecord/$','mysite.cheungssh.cheungssh.show_sign_record'),
 	url(r'^cheungssh/getalluser/$','mysite.cheungssh.cheungssh.getalluser'),
+	url(r"^cheungssh/setthreshold/$","mysite.cheungssh.cheungssh.set_threshold"),
+	url(r"^cheungssh/showiplimit/$","mysite.cheungssh.cheungssh.show_ip_limit"),
+	url(r"^cheungssh/showipthreshold/$","mysite.cheungssh.cheungssh.show_ip_threshold"),
+	url(r"^cheungssh/deliplimit/$","mysite.cheungssh.cheungssh.del_ip_limit"),
 	)

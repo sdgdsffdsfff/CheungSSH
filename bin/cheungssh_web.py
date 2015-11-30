@@ -82,8 +82,10 @@ def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data,
 	finally:
 		ssh.close()
 	if Data.excutetype=='cmd':
+		print '命令方式'
 		sendinfo.sendinfo(str({ie_key:info}))
 	elif Data.excutetype=='crontab':
+		print '计划任务'
 		crondlog_show=cache.get('crondlog')
 		if  crondlog_show:
 			lasttime=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
@@ -94,11 +96,10 @@ def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data,
 			else:
 				crondlog_show[Data.fid]['status']="失败"
 			cache.set('crondlog',crondlog_show,8640000000)
-			print "已经写入"
+			
 		else:
-			print "没有crond记录， 则不写"
+			
 			pass
-		pass
 	else:
 		checktime=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
 		ipinfo={Data.hwtype:ResultSum,'ip':ip,'checktime':checktime}
@@ -111,7 +112,8 @@ def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data,
 		hwinfo[ip][Data.hwtype]=ResultSum
 		hwinfo[ip]['checktime']=checktime
 		cache.set('hwinfo',hwinfo,864000000)
-	set_redis_data('cmd.%s.%s'%(tid,ip),json.dumps(ResultSum,encoding="utf-8",ensure_ascii=False))
+	R=set_redis_data('cmd.%s.%s'%(tid,ip),json.dumps(ResultSum,encoding="utf-8",ensure_ascii=False))
+	print "cmd.%s.%s" %(tid,ip)
 def main(cmd,ie_key,selectserver,Data,tid,excutetype='cmd',hwtype='CPU'):
 	Data.excutetype=excutetype
 	Data.hwtype=hwtype
@@ -159,4 +161,5 @@ if __name__=='__main__':
 			fcontent.close()
 			break
 	print cmd
-	main(cmd,'all-ie',selectserver,Data,'crontab')
+	fcontent.close()
+	main(cmd,'all-ie',selectserver,Data,fid,'crontab')

@@ -10,7 +10,7 @@ from permission_check import permission_check
 sys.path.append('/home/cheungssh/bin')
 import IP,hwinfo,DataConf,ssh_check
 import cheungssh_web,login_check
-import re
+import re,platform
 upload_dir="/home/cheungssh/upload"
 keyfiledir="/home/cheungssh/keyfile"
 scriptfiledir="/home/cheungssh/scriptfile"
@@ -22,6 +22,7 @@ import login_check
 import db_to_redis_allconf
 from page_list import page_list
 from page_list_new import pagelist
+from black_cmd import black_cmd_check
 crond_file="/home/cheungssh/crond/crond_file"
 cmdfile="/home/cheungssh/data/cmd/cmdfile"
 import redis_to_redis
@@ -32,11 +33,13 @@ def cheungssh_login(request):
 	logintime=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
 	client_ip=request.META['REMOTE_ADDR']
 	limit_ip='fail.limit.%s'%(client_ip)
+	ip_threshold_r=cache.get('ip.threshold')  
+	ip_threshold=lambda x:x if x is not None else 4 
+	ip_threshold=ip_threshold(ip_threshold_r)
 	if cache.has_key(limit_ip):
-		if cache.get(limit_ip)>4:
-			print '该用户IP已经被锁定'
+		if cache.get(limit_ip)>ip_threshold:  
 			info['content']="无效登陆"
-			cache.incr(limit_ip)
+			cache.incr(limit_ip)  
 			cache.expire(limit_ip,8640000)
 			info=json.dumps(info)
 			return HttpResponse(info)
@@ -207,8 +210,8 @@ def delkey(request):
 		info="%s(%s)"  % (callback,info)
 	return HttpResponse(info)
 		
-@login_check.login_check('PC上传') 
-@permission_check('cheungssh.local_file_upload') 
+#@login_check.login_check('PC上传') 
+#@permission_check('cheungssh.local_file_upload') 
 def upload_file_test(request):
 	fid=str(random.randint(90000000000000000000,99999999999999999999))
 	info={"msgtype":"ERR","content":"","path":""}
@@ -490,11 +493,12 @@ def crontab(request):
 	runtime=request.GET.get('runtime')
 	runtype=request.GET.get('type')
 	info={"msgtype":"ERR","content":""}
-	crond_status=commands.getstatusoutput('/etc/init.d/crond status')
-	crondlog_value={}
+	if platform.dist()[0]=='Ubuntu':    
+		crond_status=(0,'')
+	else:
+		crond_status=commands.getstatusoutput('/etc/init.d/crond status')
 	if not crond_status[0]==0:
 		info['content']=crond_status[1]
-		print 'crond没有启动'
 	else:
 		try:
 			value=eval(value)
@@ -586,9 +590,8 @@ def local_upload_show(request):
 	else:
 		info="%s(%s)"  % (callback,info)
 	return HttpResponse(info)
-from black_cmd import black_cmd_check
-@login_check.login_check('执行命令')
-@permission_check('cheungssh.excute_cmd')
+#@login_check.login_check('执行命令')
+#@permission_check('cheungssh.excute_cmd')
 @black_cmd_check
 def excutecmd(request):
 	info={'msgtype':'ERR','content':[]}
@@ -638,7 +641,7 @@ def excutecmd(request):
 		print "发生错误",e
 		info['msgtype']='ERR'
 		info['content']=str(e)
-	info=json.dumps(info)
+	info=json.dumps(info,encoding="utf-8",ensure_ascii=False)
 	if callback is None:
 		info=info
 	else:
@@ -657,14 +660,14 @@ def cmdhistory(request):
 		info={"msgtype":"OK","content":[],"totalnum":0}
 	else:
 		info=pagelist(request,cmd_history)
-	for t in info["content"]: 
+	T=[]
+	for t in info['content']: 
 		cmd_result_id="cmd.%s.%s" % (t['tid'],t['servers'])
-		if cmd_result_id is None:continue
 		cmd_result=redis_to_redis.get_redis_data(cmd_result_id,'list')['content']
-		info["content"].remove(t)
+		
 		t["result"]=re.sub("""\\"|\\'""",'',"</br>".join(cmd_result))
-		print type(cmd_result)
-		info["content"].append(t)  
+		T.append(t)  
+	info['content']=T
 	info=json.dumps(info,encoding="utf-8",ensure_ascii=False)
 	if callback is None:
 		info=info
@@ -907,9 +910,8 @@ def batchconfig_web(request):
 	batchallconf={}
 	try:
 		
-		i=0
+		keyfilelog=cache.get('keyfilelog')
 		for p in configcontent.split('\n'):
-			i+=1
 			id=str(random.randint(90000000000000000000,99999999999999999999))
 			p=re.sub('^ *','',p)  
 			if re.search('^#',p) or re.search('^$',p) :continue
@@ -918,6 +920,11 @@ def batchconfig_web(request):
 			try:int(confline[1])
 			except:raise IOError("在第[%i]行,端口应该是一个数字:[%s]" %(i,confline[1]))
 			if not confline[4]=='KEY' and not confline[4]=='PASSWORD':raise IOError('在第[%d]行,登录方式[%s]应该是KEY 或者 PASSWORD' % (i,confline[4]))
+			keyfile=confline[5]
+			for k in keyfilelog.keys():
+				if keyfilelog[k]['filename']==keyfile:
+					keyfile=k
+					break
 			tconf={
 				"id":id,
 				"ip":confline[0],
@@ -925,14 +932,14 @@ def batchconfig_web(request):
 				"group":confline[2],
 				"username":confline[3],
 				"loginmethod":confline[4],
-				"keyfile":confline[5],  
+				"keyfile":keyfile,  
 				"password":confline[6],
 				"sudo":confline[7],
 				"sudopassword":confline[8],
 				"su":confline[9],
 				"supassword":confline[10],
 				"owner":username,
-				"descript":configline[12]
+				"descript":confline[12]
 				} 
 			
 			batchallconf[id]=tconf 
@@ -1046,6 +1053,103 @@ def getalluser(request):
 	info["msgtype"]="OK"
 	info["content"]=sysuser
 	info=json.dumps(info,encoding='utf-8',ensure_ascii=False)
+	if callback is None:
+		info=info
+	else:
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response
+@login_check.login_check('重置登陆失败阈值')
+@permission_check('set_threshold')
+def set_threshold(request):
+	info={"msgtype":"ERR"}
+	threshold=request.GET.get('threshold')
+	callback=request.GET.get('callback')
+	try:
+		threshold=int(threshold)
+		cache.set('ip.threshold',threshold,8640000000)
+		info['msgtype']="OK"
+	except Exception,e:
+		info["参数应该是一个数字"]
+	info=json.dumps(info,encoding="utf-8",ensure_ascii=False)
+	if callback is None:
+		info=info
+	else:
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response
+
+@login_check.login_check('查看登录失败记录')
+@permission_check('show_ip_limit')
+def show_ip_limit(request):
+	info={"msgtype":"ERR","content":[]}
+	callback=request.GET.get('callback')
+	R=cache.master_client
+	ip_limit_list=[]
+	for t in R.keys():
+		if re.search(':1:fail\.limit.*',t):
+			ip=re.sub(':1:fail\.limit\.','',t)
+			ip_time=cache.get('fail.limit.%s' % (ip))
+			
+			ip_threshold_r=cache.get('ip.threshold')  
+			ip_threshold=lambda x:x if x is not None else 4 
+			ip_threshold=ip_threshold(ip_threshold_r)
+			
+			if ip_time> ip_threshold:
+				ip_status="已锁定"
+			else:
+				ip_status="未超过阈值"
+			ip_limit={"ip":ip,"ip-locate":IP.find(ip),"time":ip_time,"status":ip_status}
+			ip_limit_list.append(ip_limit)
+	
+	info["content"]=ip_limit_list
+	info["msgtype"]="OK"
+	info=json.dumps(info,encoding="utf-8",ensure_ascii=False)
+	if callback is None:
+		info=info
+	else:
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response
+@login_check.login_check('删除锁定IP')
+@permission_check('del_ip_limit')
+def del_ip_limit(request):
+	callback=request.GET.get('callback')
+	ip=request.GET.get('ip')
+	info={"msgtype":"ERR"}
+	ip="fail.limit.%s" %(ip)
+	cache.delete(ip)
+	info["msgtype"]="OK"
+	info=json.dumps(info,encoding="utf-8",ensure_ascii=False)
+	if callback is None:
+		info=info
+	else:
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response
+@login_check.login_check('查看登陆失败次数阈值')
+@permission_check('show_threshold')
+def show_ip_threshold(request):
+	callback=request.GET.get('callback')
+	info={"msgtype":"ERR"}
+	ip_threshold_r=cache.get('ip.threshold')  
+	ip_threshold=lambda x:x if x is not None else 4 
+	ip_threshold=ip_threshold(ip_threshold_r)
+	info["content"]=ip_threshold
+	info["msgtype"]="OK"
+	info=json.dumps(info,encoding="utf-8",ensure_ascii=False)
 	if callback is None:
 		info=info
 	else:

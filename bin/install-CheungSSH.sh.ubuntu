@@ -52,7 +52,6 @@ echo  "开始安装......"
 	if  [ $? -ne 0 ]
 	then
 			echo  "apt-get安装失败了"
-			exit 1
 	fi
 	which pip
 	if [ $? -ne 0 ]
@@ -129,7 +128,7 @@ EOFparamiko
 	fi
 		
 
-	read -p  'CheungSSH需要数据库支持， 您是否有可用的Mysql服务器?  (yes/no) ' emysql
+	read -p  'CheungSSH需要数据库支持，远程或者本地都行，如果没有，程序将为您安装，如果有，您在以后需要填写数据信息  yes表示有， no表示没有，有还是没有? (yes/no) ' emysql
 	emysql=${emysql:-y}
 	echo $emysql|grep -iE '^n' -q
 	if [ $? -ne 0 ]
