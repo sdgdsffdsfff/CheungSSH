@@ -944,7 +944,7 @@ def batchconfig_web(request):
 				"su":confline[9],
 				"supassword":confline[10],
 				"owner":username,
-				"descript":confline[12]
+				"descript":confline[11]
 				} 
 			
 			batchallconf[id]=tconf 
