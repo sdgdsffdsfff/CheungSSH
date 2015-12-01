@@ -322,7 +322,7 @@ EOF
 		mp=3306
 	fi
 	#创建cheungssh数据库
-	mysql -uroot -h${mip} -u${musername} -p${mpassword} -P${mp} -e 'create database if not exists cheungssh  default charset utf8'
+	mysql -u${musername}  -h${mip}  -p${mpassword} -P${mp} -e 'create database if not exists cheungssh  default charset utf8'
 	if  [ $? -ne 0 ]
 	then
 		echo "连接数据库错误,请检查原因，端口， 密码， IP是否正确？您是否已经有Mysql服务器？"

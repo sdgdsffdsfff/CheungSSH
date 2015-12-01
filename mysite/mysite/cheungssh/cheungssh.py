@@ -210,8 +210,8 @@ def delkey(request):
 		info="%s(%s)"  % (callback,info)
 	return HttpResponse(info)
 		
-#@login_check.login_check('PC上传') 
-#@permission_check('cheungssh.local_file_upload') 
+@login_check.login_check('PC上传') 
+@permission_check('cheungssh.local_file_upload') 
 def upload_file_test(request):
 	fid=str(random.randint(90000000000000000000,99999999999999999999))
 	info={"msgtype":"ERR","content":"","path":""}
@@ -590,8 +590,8 @@ def local_upload_show(request):
 	else:
 		info="%s(%s)"  % (callback,info)
 	return HttpResponse(info)
-#@login_check.login_check('执行命令')
-#@permission_check('cheungssh.excute_cmd')
+@login_check.login_check('执行命令')
+@permission_check('cheungssh.excute_cmd')
 @black_cmd_check
 def excutecmd(request):
 	info={'msgtype':'ERR','content':[]}
@@ -818,19 +818,23 @@ def show_scriptlist(request):
 def del_script(request):
 	
 	info={"msgtype":"ERR"}
+	callback=request.GET.get('callback')
 	try:
-		filenames=request.GET.get('filenames') 
+		filenames=request.GET.get('filename') 
 		scriptlogline=cache.get('scriptlogline')  
 		if scriptlogline:
-			for filename in  scriptlogline:
+			for f in  scriptlogline.keys():
 				try:
-					del scriptlogline[filename]
+					if filenames==f:
+						del scriptlogline[f]
+						break
 				except KeyError:
 					pass
 				except Exception,e:
 					print '错误',e
 					info['content']=str(e)
 					break
+			cache.set('scriptlogline',scriptlogline,8640000000)
 			info['msgtype']='OK'
 	except Exception,e:
 		info['content']=str(e)
@@ -921,10 +925,11 @@ def batchconfig_web(request):
 			except:raise IOError("在第[%i]行,端口应该是一个数字:[%s]" %(i,confline[1]))
 			if not confline[4]=='KEY' and not confline[4]=='PASSWORD':raise IOError('在第[%d]行,登录方式[%s]应该是KEY 或者 PASSWORD' % (i,confline[4]))
 			keyfile=confline[5]
-			for k in keyfilelog.keys():
-				if keyfilelog[k]['filename']==keyfile:
-					keyfile=k
-					break
+			if not keyfilelog is None:  
+				for k in keyfilelog.keys():
+					if keyfilelog[k]['filename']==keyfile:
+						keyfile=k
+						break
 			tconf={
 				"id":id,
 				"ip":confline[0],
