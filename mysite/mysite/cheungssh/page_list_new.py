@@ -25,10 +25,12 @@ def pagelist(request,datalist):
 					t=eval(t)
 				except Exception,e:
 					pass
-				if not t.has_key('user'):
-					if request.user.is_superuser:
-						datalist_all.append(t)
-				elif username==t["user"] or request.user.is_superuser:
+				Tusername=''
+				if t.has_key('user'):
+					Tusername='user'
+				else:
+					Tusername='username'
+				if username==t[Tusername] or request.user.is_superuser:  
 					datalist_all.append(t)
 			
 			datalist_sub=datalist_all[startpage:endpage]

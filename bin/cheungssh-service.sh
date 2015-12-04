@@ -24,7 +24,7 @@ start(){
 			else
 				cnf="/etc/mysql/my.cnf"
 			fi
-			mysql_sock=`grep  -E '^ *socket.*mysql.sock' $cnf|awk  -F  '=' 'NR==1{print  $NF}'`
+			mysql_sock=`grep  -E '^ *socket.*mysql.*sock$' $cnf|awk  -F  '=' 'NR==1{print  $NF}'`
 			if [ ! -e $dest_mysql_sock ]
 			then
 				ln -s $mysql_sock  $dest_mysql_sock

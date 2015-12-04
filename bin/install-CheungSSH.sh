@@ -14,13 +14,13 @@ os: redhat 5系列
 os: redhat 6系列 
 os: ubuntu
 python 2.6 或者 2.7
-gcc			如果是本地安装方式，需手动安装
-python-devel		如果是本地安装方式，需手动安装
-openssl-devel		如果是本地安装方式，要手动安装
-mysql-devel		如果是本地安装方式，需手动安装
-mysql-server		如果是本地安装方式，需手动安装
-httpd-devel		如果是本地安装方式，需手动安装
-httpd			如果是本地安装方式，需手动安装
+gcc			如果是本地安装方式，需手动安装,联网方式方式则自动安装
+python-devel		如果是本地安装方式，需手动安装,联网方式方式则自动安装
+openssl-devel		如果是本地安装方式，要手动安装,联网方式方式则自动安装
+mysql-devel		如果是本地安装方式，需手动安装,联网方式方式则自动安装
+mysql-server		如果是本地安装方式，需手动安装,联网方式方式则自动安装
+httpd-devel		如果是本地安装方式，需手动安装,联网方式方式则自动安装
+httpd			如果是本地安装方式，需手动安装,联网方式方式则自动安装
 setuptools 
 django 1.4
 django-cors-headers
@@ -137,7 +137,7 @@ yum_install(){
 		/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
 		yum clear all && yum makecache
 		echo  "重装yum..."
-		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel  --skip-broken
+		yum install  -y gcc python-devel openssl-devel mysql-devel MySQL-python  swig httpd httpd-devel python-pip libevent-devel  --skip-broken
 		if  [ $? -ne 0 ]
 		then
 			echo  "Yum安装又失败了"
@@ -150,11 +150,11 @@ yum_install(){
 		/bin/cp  -f /home/cheungssh/conf/*repo  /etc/yum.repos.d/
 		yum clear all && yum makecache
 		echo  "重装yum..."
-		yum install  -y gcc python-devel openssl-devel mysql-devel  swig httpd httpd-devel python-pip libevent-devel --skip-broken
-		if [ `rpm -qa|grep -Eo 'gcc|python-devel|openssl-devel|mysql-devel|swig|httpd|httpd-devel|libevent-devel'|sort|uniq|wc -l` -lt 8 ]
+		yum install  -y gcc python-devel openssl-devel mysql-devel  MySQL-python swig httpd httpd-devel python-pip libevent-devel --skip-broken
+		if [ `rpm -qa|grep -Eo 'gcc|python-devel|openssl-devel|mysql-devel|swig|httpd|httpd-devel|libevent-devel'|sort|uniq|wc -l` -lt 9 ]
 		then
 			echo "有些包不能安装上...如下:"
-			a="gcc python-devel openssl-devel mysql-devel swig httpd httpd-devel libevent-devel"
+			a="gcc python-devel openssl-devel mysql-devel swig httpd httpd-devel libevent-devel MySQL-python "
 			for b in $a
 			do
 				rpm -qa|grep $b
@@ -197,7 +197,7 @@ yum_install(){
 		fi
 	fi
 	echo "使用pip安装"
-	pip install    MySQL-python paramiko  django-redis django-redis-cache  redis   pycrypto-on-pypi  django-cors-headers setuptools
+	pip install     paramiko  django-redis django-redis-cache  redis   pycrypto-on-pypi  django-cors-headers setuptools
 	if  [ $? -ne 0 ]
 	then
 		echo "安装失败,如果错误信息是 time out 可能是您的网络不好导致的，请重试安装即可"
@@ -322,7 +322,7 @@ EOF
 		mp=3306
 	fi
 	#创建cheungssh数据库
-	mysql -uroot -h${mip} -u${musername} -p${mpassword} -P${mp} -e 'create database if not exists cheungssh  default charset utf8'
+	mysql -u${musername}  -h${mip}  -p${mpassword} -P${mp} -e 'create database if not exists cheungssh  default charset utf8'
 	if  [ $? -ne 0 ]
 	then
 		echo "连接数据库错误,请检查原因，端口， 密码， IP是否正确？您是否已经有Mysql服务器？"
@@ -385,6 +385,16 @@ EOF
 		echo "赋权失败 ，请检查目录是否正确"
 		exit
 	fi
+	read -p "您是否要关闭防火墙? (y/n) "  iptables
+	iptables=${iptables:-y}
+        echo $iptables|grep -iE '^n' -q
+        if [ $? -eq 0 ]
+        then
+		sed  -i '/iptables/d' /home/cheungssh/bin/cheungssh-service.sh
+	fi
+	widgets=`echo  "from django.forms import widgets;print widgets.__file__.replace('pyc','py')"|python`
+	/bin/cp /home/cheungssh/bin/widgets.py $widgets
+	"echo 安装完成！"
 	sh /home/cheungssh/bin/cheungssh-service.sh start
 	if  [ $? -ne 0 ]
 	then
@@ -508,8 +518,14 @@ case  $1 in
 		echo  "更新完成"
 		;;
 	*)
-		echo "用法 sh $0 update|install"
-		exit 1
+		if  [ `echo  "import platform;print platform.dist()[0]"|python` == "Ubuntu" ]
+		then
+			cp_file
+			bash /home/cheungssh/bin/install-CheungSSH.sh.ubuntu
+			exit 1
+		fi
+		cp_file
+		main_install
 		;;
 esac
 #delete  from auth_permission where  name like 'Can%';

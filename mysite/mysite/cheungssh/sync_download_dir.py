@@ -29,6 +29,7 @@ def cheungssh_sftp(ip,username,remotepath,localpath,port=22,loginmethod='KEY',pa
 	for f in remote_full_path_file:
 		local_full_path_file=f.replace(remotepath,localpath)
 		try:
+			#sftp.get(f,"%s.%s"%(local_full_path_file,ip))
 			sftp.get(f,local_full_path_file)
 		except Exception,e:
 			print '下载发生错误',e

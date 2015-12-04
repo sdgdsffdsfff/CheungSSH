@@ -55,22 +55,19 @@ def DownFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopasswo
 			key=paramiko.RSAKey.from_private_key_file(keyfile)
 			t.connect(username = username,pkey=key)
 		else:
-			print '密码认证',username,password
 			t.connect(username = username,password = password)
 		callback_info = functools.partial(set_progres,fid,1,1,False)
 		sftp = paramiko.SFTPClient.from_transport(t)
 		try:
 			sftp.listdir(sfile)
-			print '是一个目录，开始下载目录'
 			cheungssh_sftp(fid,ip,username,sfile,dfile,set_progres,port,loginmethod,password,keyfile)
-			print '目录下载完成'
 			return 
 		except Exception,e:
 			if e.errno==2:
 				pass
 			else:
 				raise IOError(e)
-		sftp.get(sfile,dfile,callback=callback_info)
+		sftp.get(sfile,"%s.%s" %(dfile,ip),callback=callback_info)
 		log(model,"OK")
 		info['status']='OK'
 		logline["result"]="OK"
@@ -82,10 +79,8 @@ def DownFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopasswo
 		logline['size']="%0.2fKB"  %t_size
 		cache_translog=cache.get("translog")
 		if  cache_translog:
-			print  888888888
 			cache_translog.append(logline)
 		else:
-			print  9999999999
 			translog.append(logline)
 			cache_translog=translog
 		cache.set("translog",cache_translog,3600000000)

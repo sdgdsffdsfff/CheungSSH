@@ -22,6 +22,7 @@ import login_check
 import db_to_redis_allconf
 from page_list import page_list
 from page_list_new import pagelist
+from black_cmd import black_cmd_check
 crond_file="/home/cheungssh/crond/crond_file"
 cmdfile="/home/cheungssh/data/cmd/cmdfile"
 import redis_to_redis
@@ -85,7 +86,7 @@ def cheungssh_login(request):
         response["Access-Control-Allow-Credentials"] = "true"
         return response
 @login_check.login_check('登录记录',False)
-@permission_check('show_sign_record')
+@permission_check('cheungssh.show_sign_record')
 def show_sign_record(request):
 	callback=request.GET.get('callback')
 	datainfo=redis_to_redis.get_redis_data('sign.record','list')  
@@ -113,7 +114,7 @@ def cheungssh_logout(request):
 		info="%s(%s)"  % (callback,info)
 	return HttpResponse(info)
 @login_check.login_check('文件下载到本地')
-@permission_check('local_file_download')
+@permission_check('cheungssh.local_file_download')
 def download_file(request):
 	info={"msgtype":"ERR","content":""}
 	file=request.GET.get('file')
@@ -125,7 +126,8 @@ def download_file(request):
 		else:
 			info['msgtype']='OK'
 	except Exception,e:
-		info["content"]="传入的参数不是一个json格式"
+		info["content"]="传入的参数格式错误"
+		
 	newfile=[]
 	for f in file:
 		tf=os.path.basename(f.rstrip('/'))  
@@ -589,7 +591,6 @@ def local_upload_show(request):
 	else:
 		info="%s(%s)"  % (callback,info)
 	return HttpResponse(info)
-from black_cmd import black_cmd_check
 @login_check.login_check('执行命令')
 @permission_check('cheungssh.excute_cmd')
 @black_cmd_check
@@ -818,19 +819,23 @@ def show_scriptlist(request):
 def del_script(request):
 	
 	info={"msgtype":"ERR"}
+	callback=request.GET.get('callback')
 	try:
-		filenames=request.GET.get('filenames') 
+		filenames=request.GET.get('filename') 
 		scriptlogline=cache.get('scriptlogline')  
 		if scriptlogline:
-			for filename in  scriptlogline:
+			for f in  scriptlogline.keys():
 				try:
-					del scriptlogline[filename]
+					if filenames==f:
+						del scriptlogline[f]
+						break
 				except KeyError:
 					pass
 				except Exception,e:
 					print '错误',e
 					info['content']=str(e)
 					break
+			cache.set('scriptlogline',scriptlogline,8640000000)
 			info['msgtype']='OK'
 	except Exception,e:
 		info['content']=str(e)
@@ -911,20 +916,23 @@ def batchconfig_web(request):
 	try:
 		
 		keyfilelog=cache.get('keyfilelog')
+		i=0
 		for p in configcontent.split('\n'):
+			i+=1
 			id=str(random.randint(90000000000000000000,99999999999999999999))
 			p=re.sub('^ *','',p)  
 			if re.search('^#',p) or re.search('^$',p) :continue
 			confline=p.split()  
 			
 			try:int(confline[1])
-			except:raise IOError("在第[%i]行,端口应该是一个数字:[%s]" %(i,confline[1]))
+			except:raise IOError("在第[%d]行,端口应该是一个数字:[%s]" %(i,confline[1]))
 			if not confline[4]=='KEY' and not confline[4]=='PASSWORD':raise IOError('在第[%d]行,登录方式[%s]应该是KEY 或者 PASSWORD' % (i,confline[4]))
 			keyfile=confline[5]
-			for k in keyfilelog.keys():
-				if keyfilelog[k]['filename']==keyfile:
-					keyfile=k
-					break
+			if not keyfilelog is None:  
+				for k in keyfilelog.keys():
+					if keyfilelog[k]['filename']==keyfile:
+						keyfile=k
+						break
 			tconf={
 				"id":id,
 				"ip":confline[0],
@@ -939,7 +947,7 @@ def batchconfig_web(request):
 				"su":confline[9],
 				"supassword":confline[10],
 				"owner":username,
-				"descript":confline[12]
+				"descript":confline[11]
 				} 
 			
 			batchallconf[id]=tconf 
@@ -951,7 +959,6 @@ def batchconfig_web(request):
 		allconf['content']=CONF
 		cache.set('allconf',allconf,8640000000)
 		info['msgtype']='OK'
-		print '已经导入'
 	except IndexError:
 		confline=json.dumps(confline,encoding='utf-8',ensure_ascii=False)
 		info['content']='没有足够的参数: %s' % confline

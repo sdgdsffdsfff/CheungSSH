@@ -48,7 +48,7 @@ echo  "开始安装......"
 
 	echo  "使用apt-get安装..."
 	apt-get install  -y `echo  "import sys;print 'python%s-dev'%sys.version[:3]"|python`
-	apt-get install  -y gcc  libssl-dev libmysqld-dev  swig apache2 apache2-dev python-pip libevent-dev
+	apt-get install  -y gcc  libssl-dev libmysqld-dev  swig apache2 apache2-dev python-pip libevent-dev MySQL-python
 	if  [ $? -ne 0 ]
 	then
 			echo  "apt-get安装失败了"
