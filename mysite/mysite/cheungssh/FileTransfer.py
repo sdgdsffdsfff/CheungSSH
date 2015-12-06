@@ -186,7 +186,6 @@ def UploadFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopass
 	else:
 		t.close()
 def resove_conf(conf,fid,user,action):
-	print conf,99999999999999999999999999999999999999999999999999999999,"开始解析"
 	model="transfile_getfile_resove_conf"
 	info={"msgtype":"ERR","content":""}
 	try:
@@ -218,9 +217,7 @@ def resove_conf(conf,fid,user,action):
 			keyfile=conf["keyfile"]
 		except KeyError:
 			keyfile=""
-		print "解析wanle ",5555555555555555555555555,conf
 	except Exception,e:
-		print "报错",e,11111111111111111111111111111111111111111111
 		msg=str(e)
 		log(model,msg)
 		info["content"]=msg
@@ -233,12 +230,15 @@ def resove_conf(conf,fid,user,action):
 		
 	b.start()
 def getconf(host,fid,user,action):
+	
+	
+	
 	model="getconf"
 	try:
 		if not type({})==type(host):
 			host=eval(host)
 			if not type(host)==type({}):
-				log(model,"配置信息错误， 不是一个dict格式")
+				log(model,"GXXCXXF0000000001") 
 				return False
 	except Exception,e:
 		log(model,str(e))
@@ -249,13 +249,11 @@ def getconf(host,fid,user,action):
 			hostconf=cache.get('allconf')
 		except Exception,e:
 			log(model,str(e))
-			print e,66666666666,'错误'
 		hostconf=hostconf['content'][host['id']]
-		print hostconf,"这是提取的配置"
+		
 	except Exception,e:
-		print "发生错误",e
+		
 		log(model,str(e))
-		print e
 		return False
 	hostconf["sfile"]=host["sfile"]
 	if action=="download":

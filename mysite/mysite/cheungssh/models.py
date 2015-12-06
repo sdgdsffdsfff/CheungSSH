@@ -55,6 +55,8 @@ class ServerConf(models.Model):
 				("del_ip_limit","删除锁定的IP记录"),
 				("show_threshold",'查看登陆失败次数阈值'),
 				("set_threshold","设置登录失败次数阈值"),
+				("get_remote_filecontent","查看远程服务器的文件内容"),
+				("up_remote_filecontent","更新远程文件内容"),
 
 			)
 	def __unicode__(self):

@@ -567,7 +567,7 @@ class Select(Widget):
             cheungssh_permision_show    )  
         """return u'<option value="%s"%s>%s</option>' % (
             escape(option_value), selected_html,
-            conditional_escape(force_unicode(option_label)))  
+            conditional_escape(force_unicode(option_label)))"""  
 
     def render_options(self, choices, selected_choices):
         # Normalize to strings.

@@ -51,4 +51,6 @@ urlpatterns = patterns('',
 	url(r"^cheungssh/showiplimit/$","mysite.cheungssh.cheungssh.show_ip_limit"),
 	url(r"^cheungssh/showipthreshold/$","mysite.cheungssh.cheungssh.show_ip_threshold"),
 	url(r"^cheungssh/deliplimit/$","mysite.cheungssh.cheungssh.del_ip_limit"),
+	url(r"^cheungssh/catfile/$","mysite.cheungssh.cheungssh.get_file_content"),
+	url(r'^cheungssh/updatefile/$',"mysite.cheungssh.cheungssh.up_file_content"),
 	)

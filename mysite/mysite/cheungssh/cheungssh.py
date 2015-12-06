@@ -12,6 +12,7 @@ import IP,hwinfo,DataConf,ssh_check
 import cheungssh_web,login_check
 import re,platform
 upload_dir="/home/cheungssh/upload"
+downloaddir='/home/cheungssh/download'
 keyfiledir="/home/cheungssh/keyfile"
 scriptfiledir="/home/cheungssh/scriptfile"
 reload(sys)
@@ -1070,7 +1071,7 @@ def getalluser(request):
 	response["Access-Control-Allow-Credentials"] = "true"
 	return response
 @login_check.login_check('重置登陆失败阈值')
-@permission_check('set_threshold')
+@permission_check('cheungssh.set_threshold')
 def set_threshold(request):
 	info={"msgtype":"ERR"}
 	threshold=request.GET.get('threshold')
@@ -1093,7 +1094,7 @@ def set_threshold(request):
 	return response
 
 @login_check.login_check('查看登录失败记录')
-@permission_check('show_ip_limit')
+@permission_check('cheungssh.show_ip_limit')
 def show_ip_limit(request):
 	info={"msgtype":"ERR","content":[]}
 	callback=request.GET.get('callback')
@@ -1128,7 +1129,7 @@ def show_ip_limit(request):
 	response["Access-Control-Allow-Credentials"] = "true"
 	return response
 @login_check.login_check('删除锁定IP')
-@permission_check('del_ip_limit')
+@permission_check('cheungssh.del_ip_limit')
 def del_ip_limit(request):
 	callback=request.GET.get('callback')
 	ip=request.GET.get('ip')
@@ -1147,7 +1148,7 @@ def del_ip_limit(request):
 	response["Access-Control-Allow-Credentials"] = "true"
 	return response
 @login_check.login_check('查看登陆失败次数阈值')
-@permission_check('show_threshold')
+@permission_check('cheungssh.show_threshold')
 def show_ip_threshold(request):
 	callback=request.GET.get('callback')
 	info={"msgtype":"ERR"}
@@ -1161,6 +1162,48 @@ def show_ip_threshold(request):
 		info=info
 	else:
 		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response
+@login_check.login_check('查看远程文件内容')
+@permission_check('cheungssh.get_remote_filecontent')
+def get_file_content(request):
+	info={"msgtype":"ERR"}
+	filename=request.GET.get('filename') 
+	callback=request.GET.get('callback')
+	filepath=os.path.join(downloaddir,filename)
+	try:
+		with open(filepath) as f:
+			info["content"]="".join(f.readlines())
+		info['msgtype']='OK'
+	except Exception,e:
+		info["content"]=str(e)
+	info=json.dumps(info,encoding="utf-8",ensure_ascii=False)
+	if callback is None:
+		info=info
+	else:
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+	return response
+@login_check.login_check('更新远程文件内容')
+@permission_check('cheungssh.up_remote_filecontent')
+def up_file_content(request):
+	info={"msgtype":"ERR"}
+	content=request.POST.get('content')
+	filename=request.POST.get('filename')  
+	filepath=os.path.join(upload_dir,filename)
+	try:
+		with open(filepath,'w')as f: 
+			f.write(content)
+		info["msgtype"]="OK"
+	except Exception,e:
+		info["content"]=str(e)
+	info=json.dumps(info,encoding="utf-8",ensure_ascii=False)
 	response=HttpResponse(info)
 	response["Access-Control-Allow-Origin"] = "*"
 	response["Access-Control-Allow-Methods"] = "POST"
