@@ -2,8 +2,10 @@
 #Author=Cheung Kei-Chuen
 #QQ=2418731289
 import paramiko,os,sys,re,Format_Char_Show_web,time,sendinfo,random,json
-
-def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,sudopassword,Data):
+import json
+from django.core.cache import cache
+from redis_to_redis import set_redis_data
+def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,sudopassword,Data,tid):
 	bufflog=''
 	start_time=time.time()
 	ResultSum=''
@@ -33,7 +35,8 @@ def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,s
 		while True:
 			print "当前值:",resp
 			if re.search("\[sudo\] +password for.*:",resp):
-				ssh.send("%s\n"%password)
+				print sudopassword,1111111111111111111111111111111111111
+				ssh.send("%s\n"%sudopassword)
 				print "已经发送密码"
 				while True:
 					print '开始接受正式命令消息,下面在recv...'
@@ -93,19 +96,19 @@ def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,s
 			Data.FailIP.append(ip)
 			buff=''
 			ResultSum=buff + "sudo %s" % (info)
-		##################
-		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+username+"@"+ip,color_status)
+		
+		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+'\n'+ip,color_status)
 		Show_Result=ResultSum + '\n' #+ResultSum_count
 		jindu=int(float(Data.All_Servers_num)/float(Data.All_Servers_num_all)*100)
 		TmpShow=Format_Char_Show_web.Show_Char(Show_Result+" 命令: "+cmd,color_status)
 		if color_status==1:
-			info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+			info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 		else:
-			info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"OK","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+			info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"OK","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 		b_id=str(random.randint(999999999,99999999999999999))
 		info["id"]=b_id
 		info=json.dumps(info,encoding='utf8',ensure_ascii=False)
-		#######	
+		
 	except Exception,e:
 		print '链接服务器错误'
 		color_status=1
@@ -116,10 +119,12 @@ def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,s
 		bufflog=str(e)
 		TmpShow=Format_Char_Show_web.Show_Char(ResultSum,1)
 		jindu=int(float(Data.All_Servers_num)/float(Data.All_Servers_num_all)*100)
-		Show_Result_web_status=Format_Char_Show_web.Show_Char(str(e).replace("<","&lt;")+"\n"+username+"@"+ip,color_status)
-		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+		Show_Result_web_status=Format_Char_Show_web.Show_Char(str(e).replace("<","&lt;")+"\n"+ip,color_status)
+		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 		info['id']=(str(random.randint(999999999,99999999999999999)))
 		info=json.dumps(info,encoding='utf8',ensure_ascii=False)
+	finally:
+		ssh.close()
 	#sendinfo.sendinfo(str({ie_key:info}))
 	if Data.excutetype=='cmd':
 		sendinfo.sendinfo(str({ie_key:info}))
@@ -142,3 +147,4 @@ def Excute_sudo(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,s
 				hwinfo[ip][Data.hwtype]=ResultSum
 				
 		cache.set('hwinfo',hwinfo,864000000)
+	set_redis_data('cmd.%s.%s'%(tid,ip),json.dumps(ResultSum,encoding="utf-8",ensure_ascii=False))

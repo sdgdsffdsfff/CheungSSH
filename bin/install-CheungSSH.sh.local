@@ -1,0 +1,342 @@
+
+rpm -qa|grep -E '^gcc'
+if [ $? -ne 0 ]
+then
+	echo  "没有gcc环境， 请安装gcc"
+	exit 1
+fi
+rpm -qa|grep python-devel
+
+if  [ $? -ne 0 ]
+then
+	echo  "没有python-devel 请安装"
+	exit 1
+fi
+rpm -qa|grep mysql-devel 
+if  [ $? -ne 0 ]
+then
+	 echo  "没有mysql-devel，请安装"
+	echo  "您的系统没有mysql-devel ，请到  http://rpmfind.net/linux/rpm2html/search.php?query=mysql-devel  下载与您系统对应的rpm包，然后安装"
+	exit 1
+fi
+rpm  -qa|grep openssl-devel -q
+if  [ $? -ne  0 ]
+then
+	echo  "您的系统没有openssl-devle ，请到http://rpm.pbone.net/index.php3/stat/3/srodzaj/1/search/openssl-devel    下载与您系统对应的rpm包"
+	exit 1
+fi
+rpm -qa|grep httpd-devel
+if  [ $? -ne 0 ]
+then
+	echo  "没有httpd-devel 请安装"
+	echo  "建议到 http://www.rpmfind.net/linux/rpm2html/search.php?query=httpd-devel   下载"
+	exit 1
+else
+	which apxs
+	if  [ $? -ne 0 ]
+	then
+		echo  "系统没有apxs，如果有，请加入PATH路径"
+		exit 1
+	fi
+fi
+##判断是否有paramiko
+cat<<EOF|python
+import sys,os
+try:
+        import paramiko
+except AttributeError:
+	 os.system("""sed  -i '/You should rebuild using libgmp/d;/HAVE_DECL_MPZ_POWM_SEC/d'  /usr/lib64/python*/site-packages/Crypto/Util/number.py       /usr/lib/python*/site-packages/pycrypto*/Crypto/Util/number.py""")
+except:
+        sys.exit(1)
+EOF
+if [ $? -ne 0 ]
+then
+	
+	cat<<EOFcrypto|python
+import sys
+try:
+	import Crypto
+except:
+	sys.exit(1)
+EOFcrypto
+	if [ $? -ne 0 ]
+	then
+		echo "没有crypto，现在需要安装"
+		cd /home/cheungssh/soft/  &&
+		tar xvf pycrypto-2.1.0.tar.gz &&
+		cd pycrypto-2.1.0 && 
+		python setup.py install  &&
+		if  [ $? -ne 0 ]
+		then
+			echo  "安装pycrypto失败，请检查原因"
+			exit 1
+		fi
+	fi
+	echo "开始安装paramiko..."
+	cd /home/cheungssh/soft &&
+	tar xvf paramiko-1.7.7.1.tar.gz  &&
+	cd  paramiko-1.7.7.1  &&
+	python setup.py install
+	if [ $? -ne 0 ]
+	then
+		echo "安装paramiko失败，请检查系统是否有gcc环境和python-devel环境，或者联系Q群：456335218"
+		exit 1
+	fi
+fi
+cat<<EOFjson|python
+#coding:utf-8
+import sys
+try:
+	import json
+except:
+	sys.exit(1)
+EOFjson
+if  [ $? -ne 0 ]
+then
+	cd /home/cheungssh/soft/  &&
+	tar xvf  simplejson-3.8.1.tar.gz  &&
+	cd simplejson-3.8.1  &&
+	python setup.py install
+	if  [ $? -ne 0 ]
+	then
+		echo "安装json失败了，请自行安装json"
+		exit 1
+	fi
+	cd  $(dirname    $(dirname `echo  "import simplejson;print simplejson.__file__"|python`))   &&
+	/bin/mv  simplejson json
+	if [ $? -ne 0 ]
+	then
+		echo "安装json失败，请检查原因"
+		exit 1
+	fi
+fi
+####
+cd /home/cheungssh/soft &&
+tar xvf IP.tgz  &&
+cd IP &&
+python setup.py install
+if  [ $? -ne 0 ]
+then
+	echo  "安装IP库失败"
+	exit 1
+fi
+
+cd /home/cheungssh/soft/  &&
+tar xvf Django-1.4.22.tar.gz   &&
+cd Django-1.4.22   &&
+python setup.py install   
+if  [ $? -ne 0 ]
+then
+	echo  "安装Django失败，请检查原因,或者联系CheungSSH"
+	exit 1
+fi
+cat <<EOFsetuptools|python
+import os,sys
+try:
+	import setuptools
+except:
+	sys.exit(1)
+EOFsetuptools
+if [ $? -ne 0 ]
+then
+	cd  /home/cheungssh/soft &&
+	tar xvf  setuptools-18.4.tar.gz  &&
+	cd setuptools-18.4 &&
+	python setup.py install
+	if [ $? -ne 0 ]
+	then
+		echo "安装setuptools失败，请检查原因"
+		exit 1
+	fi
+fi
+
+
+
+echo  "安装mysql-python"
+cd /home/cheungssh/soft &&
+tar xvf MySQL-python-1.2.3c1.tar.gz   &&
+cd  MySQL-python-1.2.3c1  &&
+python setup.py  install
+if  [ $? -ne 0 ]
+then
+	echo  "安装失败,请检查原因或者联系CheungSSH"
+	exit 1
+fi
+tar xvf /home/cheungssh/soft/redis-3.0.4.tar.gz -C /home/cheungssh/   &&
+cd /home/cheungssh/redis-3.0.4  &&  make
+if  [ $? -ne 0 ]
+then
+	echo "安装redis服务器失败了，请检查原因"
+	exit 1
+fi
+
+cd  /home/cheungssh/soft/ &&
+tar xvf django-redis-cache-1.6.3.tar.gz  &&
+cd  django-redis-cache-1.6.3  &&
+python setup.py install
+if  [ $? -ne 0 ]
+then
+	echo  "安装django-redis-cache失败"
+	exit 1
+fi
+cd  /home/cheungssh/soft/ &&
+tar xvf django-redis-4.3.0.tar.gz  &&
+cd django-redis-4.3.0  &&
+python setup.py install 
+if  [  $? -ne 0 ]
+then
+	echo  "安装django-redis失败了"
+	exit 1
+fi
+cd /home/cheungssh/soft  &&
+tar xvf pycrypto-on-pypi-2.3.tar.gz   &&
+cd pycrypto-on-pypi-2.3  &&
+python setup.py install
+if  [ $? -ne 0 ]
+then
+	echo  "安装pycrypto-on-pypi失败了"
+	exit 1
+fi
+cd /home/cheungssh/soft/  &&
+tar xvf  django-cors-headers-1.0.0.tar.gz  &&
+cd django-cors-headers-1.0.0 &&
+python setup.py install
+if  [ $? -ne 0 ]
+then
+	echo  "安装django-cors-headers失败"
+	exit 1
+fi
+
+
+
+while [ 1 ]
+do
+read -p  "您是否有可以使用的Mysql服务器? (y/n)" mysql
+mysql=${mysql:-y}
+echo $mysql|grep -iE '^n' -q
+if [ $? -ne 0 ]
+then
+	read  -p  "请输入您的Mysql服务器IP(默认localhost) " mip
+	read -p  "请您输入您的Mysql登录账户名(默认root)"  musername
+	read -p  "请您输入您的mysql登录密码 "  mpassword
+	read -p  "请您输入您的mysql端口(默认3306) "  mp
+	echo  "测试登录..."
+	mip=${mip:-localhost}
+	musername=${musername:-root}
+	mp=${mp:-3306}
+
+	if [[ -z $mpassword ]]
+                then
+                        mysql  -h${mip} -u${musername}  -P${mp}  <<EOF
+show databases;
+EOF
+                else
+                        mysql  -h${mip} -u${musername}  -p${mpassword} -P${mp}  <<EOF
+show databases;
+EOF
+	fi
+####
+	#$mcmd
+	if [ $? -ne 0 ]
+	then
+		echo  "mysql登录失败"
+		mcmd="mysql  -h${mip} -u${musername} -p${mpassword} -P${mp} -e 'show databases;"
+		echo $mcmd
+	else
+		echo  "登录成功"
+		 mysql -uroot -h${mip} -u${musername} -p${mpassword} -P${mp} -e 'create database if not exists cheungssh  default charset utf8'   &&
+		mysql -uroot -h${mip} -u${musername} -p${mpassword} -P${mp} cheungssh < /home/cheungssh/bin/cheungssh.sql
+		if  [ $? -ne 0 ]
+		then
+			echo  "初始化数据库失败"
+			exit 1
+		fi
+		break
+	fi
+else
+	echo "请另开装口执行安装Mysql数据库...."
+	
+fi
+done
+while [ 1 ]
+do
+read -p   "CheungSSH 需要HTTP的支持，您的系统是否有Apache服务器? (y/n)" eapache
+eapache=${eapache:-y}
+echo $eapache|grep -iE '^n' -q
+if [ $? -eq 0 ]
+then
+	echo  "请另外开启进程安装Apache服务！"
+	continue 
+else
+	break
+fi
+done
+while [ 1 ]
+do
+echo "端口" $port
+read   -p  "请指定httpd.conf的路径(程序将会替换它为CheungSSH的配置,如/etc/httpd/conf/httpd.conf): " apath
+if [[ -z $apath ]]
+then
+	echo  "必须指定配置文件路径"
+	continue
+else
+	if  [ ! -f $apath ]
+	then
+		echo "配置文件不存在,请指定存在的Apache配置，我们要替换它"
+		continue
+	else
+		break
+	fi
+fi
+	
+done
+/bin/cp  /home/cheungssh/conf/httpd.conf $apath
+if  [ $? -ne 0 ]
+then
+	echo  "替换文件失败，请检查原因"
+	exit 1
+fi
+		sed -i  "/^Listen/d" $apath  &&
+		echo "Listen $port" >> $apath
+		if  [ $? -ne 0 ]
+		then
+			 echo "修改配置失败,请检查原因"
+			exit 1
+		fi
+####安装mod_python
+        APXS=`which apxs`
+        APXS=${APXS:-/usr/sbin/apxs}
+        if [ ! -f $APXS ]
+        then
+                echo  "没有apxs文件"
+                exit 1
+        fi
+        PYTHON=`which python`
+cd /home/cheungssh/soft &&
+cd /home/cheungssh/soft &&
+tar xvf  mod_python-3.4.1.tgz  &&
+cd mod_python-3.4.1 &&
+./configure    --with-apxs=$APXS    --with-python=$PYTHON   &&
+make && make install
+        if  [ $? -ne 0 ]
+        then
+                echo "安装mod_python失败，请检查原因"
+                exit 1
+        fi
+/bin/cp /home/cheungssh/conf/version.py $(dirname `find   /usr/lib*/python*/site-packages/mod_python -type f -name version.py`)
+sh /home/cheungssh/bin/cheungssh-service.sh restart
+echo   "
+	建议使用Chrome浏览器或者360浏览器极速模式访问:
+		echo "http://$ip:$port/cheungssh"
+	手动启动CheungSSH步骤：
+		1 启动Http
+		2 启动mysql
+		3 启动redis
+		4 启动 /home/cheungssh/bin/websocket_server_cheung.py 
+	"
+
+####
+
+
+
+

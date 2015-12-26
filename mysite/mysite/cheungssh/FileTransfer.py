@@ -2,29 +2,41 @@
 #coding:utf8
 import paramiko,os,re,sys,error_linenumber,threading,functools,json
 import db_to_redis,time,socket,key_resolv
-#socket.setdefaulttimeout(3)
 from cheunglog import log
+import sync_dir
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 sys.path.append('/home/cheungssh/mysite')
 from django.core.cache import cache
 from mysite.cheungssh.models import ServerConf
-tmplogfile="/tmp/.cheungssh_file_trans.tmp"
 download_dir="/home/cheungssh/download/"
-def set_progres(fid,transferred, toBeTransferred):
-	allsize=toBeTransferred
-	nowsize=transferred
+from sftp_download_dir import cheungssh_sftp
+def set_progres(fid,filenum,ifile,isdir,transferred, toBeTransferred):
 	lasttime=time.strftime('%Y-%m-%d %H:%M:%S',time.localtime())
-	info={"fid":fid,"msgtype":"OK","content":"","progres":"","allsize":allsize,'status':"running","lasttime":lasttime}
+	info={"fid":fid,"msgtype":"OK","content":"","progres":"","allsize":"",'status':"running","lasttime":lasttime}
 	cache_size_id="fid:size:%s" %(fid)
-	allsize+=0.0001
-	progres="%0.2f" % (float(nowsize)/float(allsize)*100)
+	if isdir:
+		allsize=filenum
+		nowsize=ifile
+		progres="%0.2f" % (float(nowsize)/float(allsize)*100)
+		print '::::%s:::%s::::::::%s' %(nowsize,allsize,progres)
+	else:
+		allsize=toBeTransferred
+		nowsize=transferred
+		allsize+=0.0001
+		progres="%0.2f" % (float(nowsize)/float(allsize)/filenum *100)
+		if transferred==toBeTransferred:
+			info['status']='OK'
+			info['msgtype']='OK'
+			progres=100
 	if progres=="100.00":info["msgtype"]="OK"
+	info['allsize']=allsize
 	info["progres"]=progres
-	#info=json.dumps(info)
 	try:
 		cache.set("info:%s"%(fid),info,600)
 		cache.set(cache_size_id,allsize,360000000)
+		print info,6666666666666666666666666666666666666666666
 	except Exception,e:
+		print '发生错误',e
 		pass
 def DownFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopassword,loginmethod,keyfile,fid,user):
 	socket.setdefaulttimeout(3)
@@ -44,10 +56,18 @@ def DownFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopasswo
 			t.connect(username = username,pkey=key)
 		else:
 			t.connect(username = username,password = password)
-		callback_info = functools.partial(set_progres,fid)
+		callback_info = functools.partial(set_progres,fid,1,1,False)
 		sftp = paramiko.SFTPClient.from_transport(t)
-		print dfile
-		sftp.get(sfile,dfile,callback=callback_info)
+		try:
+			sftp.listdir(sfile)
+			cheungssh_sftp(fid,ip,username,sfile,dfile,set_progres,port,loginmethod,password,keyfile)
+			return 
+		except Exception,e:
+			if e.errno==2:
+				pass
+			else:
+				raise IOError(e)
+		sftp.get(sfile,"%s.%s" %(dfile,ip),callback=callback_info)
 		log(model,"OK")
 		info['status']='OK'
 		logline["result"]="OK"
@@ -59,10 +79,8 @@ def DownFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopasswo
 		logline['size']="%0.2fKB"  %t_size
 		cache_translog=cache.get("translog")
 		if  cache_translog:
-			print  888888888
 			cache_translog.append(logline)
 		else:
-			print  9999999999
 			translog.append(logline)
 			cache_translog=translog
 		cache.set("translog",cache_translog,3600000000)
@@ -78,6 +96,7 @@ def DownFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopasswo
 		cache_translog=cache.get("translog")
 		print "抓取到异常...",e
 		logline["result"]=msg
+	
 	
 
 
@@ -101,39 +120,47 @@ def UploadFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopass
 		else:
 			print "密码登陆"
 			t.connect(username = username,password = password)
-		callback_info = functools.partial(set_progres,fid)
-		sftp = paramiko.SFTPClient.from_transport(t)
-		if dfile.endswith('/'):
+		
+		if os.path.isdir(sfile):
+			#(sdir,ddir,username,password,ip,loginmethod,keyfile,port=22,force=True,callback_info):
+			print " [%s]" % password
+			sync_dir.UploadFile(sfile,dfile,username,password,ip,loginmethod,keyfile,fid,set_progres,port,True)
+			pass
+		else:
+			
+			sftp = paramiko.SFTPClient.from_transport(t)
+			if dfile.endswith('/'):
+				try:
+					sftp.listdir(dfile)
+				except Exception,e:
+					raise IOError("%s 目录不存在" %(dfile))
 			try:
 				sftp.listdir(dfile)
+				dfile=os.path.join(dfile,os.path.basename(sfile))
 			except Exception,e:
-				raise IOError("%s 目录不存在" %(dfile))
-		try:
-			sftp.listdir(dfile)
-			dfile=os.path.join(dfile,os.path.basename(sfile))
-		except Exception,e:
-			pass
-		print sfile,dfile
-		sftp.put(sfile,dfile,callback=callback_info)
-		log(model,"OK")
-		logline["result"]="OK"
-		info["status"]="OK"
-		info["msgtype"]="OK"
-		cache_size_id="fid:size:%s" %(fid)
-		cache_size=cache.get(cache_size_id)
-		if cache_size is None:
-			cache_size=0
-		t_size=float(cache_size)/float(1024)
-		logline['size']="%0.2fKB"  %t_size
-		cache_translog=cache.get("translog")
-		if  cache_translog:
-			print  888888888
-			cache_translog.append(logline)
-		else:
-			print  9999999999
-			translog.append(logline)
-			cache_translog=translog
-		cache.set("translog",cache_translog,3600000000)
+				pass
+			print sfile,dfile
+			callback_info = functools.partial(set_progres,fid,1,1,False)
+			sftp.put(sfile,dfile,callback=callback_info)
+			log(model,"OK")
+			logline["result"]="OK"
+			info["status"]="OK"
+			info["msgtype"]="OK"
+			cache_size_id="fid:size:%s" %(fid)
+			cache_size=cache.get(cache_size_id)
+			if cache_size is None:
+				cache_size=0
+			t_size=float(cache_size)/float(1024)
+			logline['size']="%0.2fKB"  %t_size
+			cache_translog=cache.get("translog")
+			if  cache_translog:
+				print  888888888
+				cache_translog.append(logline)
+			else:
+				print  9999999999
+				translog.append(logline)
+				cache_translog=translog
+			cache.set("translog",cache_translog,3600000000)
 	except Exception,e:
 		print "报错",e
 		msg=str(e)
@@ -159,8 +186,6 @@ def UploadFile(dfile,sfile,username,password,ip,port,su,supassword,sudo,sudopass
 	else:
 		t.close()
 def resove_conf(conf,fid,user,action):
-	print conf,99999999999999999999999999999999999999999999999999999999,"开始解析"
-	#conf= {}
 	model="transfile_getfile_resove_conf"
 	info={"msgtype":"ERR","content":""}
 	try:
@@ -192,9 +217,7 @@ def resove_conf(conf,fid,user,action):
 			keyfile=conf["keyfile"]
 		except KeyError:
 			keyfile=""
-		print "解析wanle ",5555555555555555555555555,conf
 	except Exception,e:
-		print "报错",e,11111111111111111111111111111111111111111111
 		msg=str(e)
 		log(model,msg)
 		info["content"]=msg
@@ -207,38 +230,36 @@ def resove_conf(conf,fid,user,action):
 		
 	b.start()
 def getconf(host,fid,user,action):
+	
+	
+	
 	model="getconf"
-	#host is {}
 	try:
 		if not type({})==type(host):
 			host=eval(host)
 			if not type(host)==type({}):
-				log(model,"配置信息错误， 不是一个dict格式")
+				log(model,"GXXCXXF0000000001") 
 				return False
 	except Exception,e:
 		log(model,str(e))
 		print "有错误",e
 		return False
 	try:
-		#db get info is {}
 		try:
 			hostconf=cache.get('allconf')
 		except Exception,e:
 			log(model,str(e))
-			print e,66666666666,'错误'
 		hostconf=hostconf['content'][host['id']]
-		print hostconf,"这是提取的配置"
+		
 	except Exception,e:
-		print "发生错误",e
+		
 		log(model,str(e))
-		print e
 		return False
 	hostconf["sfile"]=host["sfile"]
 	if action=="download":
 		hostconf["dfile"]=os.path.basename(host["sfile"])
 	else:
 		hostconf["dfile"]=host["dfile"]
-	print '启动解析....'
 	resove_conf(hostconf,fid,user,action)
 def translog(request):
 	callback=request.GET.get("callback")

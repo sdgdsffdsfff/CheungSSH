@@ -53,23 +53,26 @@ def crond_record(value):
 	else:
 		print '写入日志失败了'
 		return False
-def crond_show():
+def crond_show(request):
 	crondlog_show=cache.get('crondlog')
 	if crondlog_show:
 		crondlog_show_all=crondlog_show
+		crond_back_list=[]
 		for fid in crondlog_show_all.keys():
-			fid_progres_info=cache.get('info:%s' % (fid))
-			if fid_progres_info:
-				crondlog_show_all[fid]['status']=fid_progres_info['msgtype']
-				try:
-					crondlog_show_all[fid]['lasttime']=fid_progres_info['lasttime']
-				except:
-					pass
-				if fid_progres_info['content']:
-					crondlog_show_all[fid]['content']=fid_progres_info['content']
-				else:
-					crondlog_show_all[fid]['content']="正常"
-		crondlog_show=crondlog_show_all.values()
-		return True,crondlog_show
+			if request.user.username==crondlog_show_all[fid]['user']  or request.user.is_superuser:
+				fid_progres_info=cache.get('info:%s' % (fid))
+				if fid_progres_info: 
+					crondlog_show_all[fid]['status']=fid_progres_info['msgtype']
+					try:
+						crondlog_show_all[fid]['lasttime']=fid_progres_info['lasttime']
+					except:
+						pass
+					if fid_progres_info['content']:
+						crondlog_show_all[fid]['content']=fid_progres_info['content']
+					else:
+						crondlog_show_all[fid]['content']="正常"
+					
+				crond_back_list.append(crondlog_show_all[fid])
+		return True,crond_back_list
 	else:
-		return False,"没有任务"
+		return False,[]

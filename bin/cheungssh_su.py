@@ -1,6 +1,11 @@
 #coding:utf-8
 import os,sys,time,paramiko,Format_Char_Show_web,re,random,json,sendinfo
-def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,rootpassword,Data):
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+sys.path.append('/home/cheungssh/mysite')
+from django.core.cache import cache
+import json
+from redis_to_redis import set_redis_data
+def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,rootpassword,Data,tid):
 	bufflog=''
 	start_time=time.time()
 	ResultSum=''
@@ -17,18 +22,20 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 			t.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 			t.connect(ip,port,username,password)
 		ssh=t.invoke_shell()
-		ssh.send("LANG=zh_CN.UTF-8\n")
-		ssh.send("export LANG\n")
+		#ssh.send("LANG=zh_CN.UTF-8\n")
+		#ssh.send("export LANG\n")
 		ssh.send("su - root\n")
 		buff=''
 		while not re.search("Password:",buff) and not re.search("：", buff):
 			resp=ssh.recv(9999)
 			buff += resp
+			print resp
 		ssh.send("%s\n" % (rootpassword))
 		buff1=''
 		while True:
 			resp=ssh.recv(500)
 			buff1 += resp
+			print resp
 			if  re.search('su:',buff1):
 				break
 			else:
@@ -46,6 +53,7 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 			while not buff.endswith("# "):
 				resp=ssh.recv(9999)
 				buff  += resp
+				print resp
 				bufflog  += resp.strip('\r\n') + '\\n'
 			t.close()
 			Data.All_Servers_num += 1
@@ -66,9 +74,9 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 			
 			ResultSum=buff + "Su Failed (Password Error)"
 		print 'color:',color_status
-		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+username+"@"+ip,color_status)
+		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+'\n'+ip,color_status)
 		print 'color:',color_status
-			
+		ssh.close()
 	except Exception,e:
 		color_status=1
 		Data.All_Servers_num += 1
@@ -76,15 +84,15 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 		Data.FailIP.append(ip)
 		ResultSum=str(e)
 		bufflog=str(e)
-		Show_Result_web_status=Format_Char_Show_web.Show_Char(str(e).replace("<","&lt;")+"\n"+username+"@"+ip,color_status)
+		Show_Result_web_status=Format_Char_Show_web.Show_Char(str(e).replace("<","&lt;")+"\n"+ip,color_status)
 	jindu=int(float(Data.All_Servers_num)/float(Data.All_Servers_num_all)*100)
 	if color_status==0:
-		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"OK","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"OK","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 	else:
-		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 	info['id']=(str(random.randint(999999999,99999999999999999)))
 	info=json.dumps(info,encoding='utf8',ensure_ascii=False)
-	#sendinfo.sendinfo(str({ie_key:info}))
+	print ResultSum
 	if Data.excutetype=='cmd':
 		sendinfo.sendinfo(str({ie_key:info}))
 	else:
@@ -95,7 +103,6 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 			ipinfo={Data.hwtype:ResultSum,'ip':ip,'checktime':checktime}
 			hwinfo[ip]=ipinfo
 		else:
-			#hwinfo[ip][Data.hwtype]=ResultSum
 			if hwinfo.has_key(ip):
 				hwinfo[ip][Data.hwtype]=ResultSum
 			else:
@@ -103,3 +110,5 @@ def Excute_suroot(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group
 				hwinfo[ip]=ipinfo
 				hwinfo[ip][Data.hwtype]=ResultSum
 		cache.set('hwinfo',hwinfo,864000000)
+	
+	set_redis_data('cmd.%s.%s'%(tid,ip),json.dumps(ResultSum,encoding="utf-8",ensure_ascii=False))

@@ -204,7 +204,7 @@ DESTLIB=$(LIBDEST)
 
 
 
-##########################################################################
+
 # Modules
 MODULE_OBJS=	\
 		Modules/config.o \
@@ -216,7 +216,7 @@ MODULE_OBJS=	\
 SIGNAL_OBJS=	
 
 
-##########################################################################
+
 # Grammar
 GRAMMAR_STAMP=	$(srcdir)/grammar-stamp
 GRAMMAR_H=	$(srcdir)/Include/graminit.h
@@ -224,7 +224,7 @@ GRAMMAR_C=	$(srcdir)/Python/graminit.c
 GRAMMAR_INPUT=	$(srcdir)/Grammar/Grammar
 
 
-##########################################################################
+
 # Parser
 PGEN=		Parser/pgen$(EXE)
 
@@ -256,7 +256,7 @@ PARSER_HEADERS= \
 
 PGENOBJS=	$(PGENMAIN) $(POBJS) $(PGOBJS)
 
-##########################################################################
+
 # AST
 AST_H_DIR=	$(srcdir)/Include
 AST_H=		$(AST_H_DIR)/Python-ast.h
@@ -268,7 +268,7 @@ ASDLGEN_FILES=	$(srcdir)/Parser/asdl.py $(srcdir)/Parser/asdl_c.py
 # XXX Note that a build now requires Python exist before the build starts
 ASDLGEN=	$(srcdir)/Parser/asdl_c.py
 
-##########################################################################
+
 # Python
 PYTHON_OBJS=	\
 		Python/_warnings.o \
@@ -319,7 +319,7 @@ PYTHON_OBJS=	\
 		$(THREADOBJ)
 
 
-##########################################################################
+
 # Objects
 OBJECT_OBJS=	\
 		Objects/abstract.o \
@@ -360,7 +360,7 @@ OBJECT_OBJS=	\
 		$(UNICODE_OBJS)
 
 
-##########################################################################
+
 # objects that get linked into the Python library
 LIBRARY_OBJS=	\
 		Modules/getbuildinfo.o \
@@ -371,7 +371,7 @@ LIBRARY_OBJS=	\
 		$(SIGNAL_OBJS) \
 		$(MODOBJS)
 
-#########################################################################
+
 # Rules
 
 # Default target
@@ -503,7 +503,7 @@ Modules/Setup: $(srcdir)/Modules/Setup.dist
 		echo "-----------------------------------------------"; \
 	fi
 
-############################################################################
+
 # Special rules for object files
 
 Modules/getbuildinfo.o: $(PARSER_OBJS) \
@@ -615,7 +615,7 @@ Python/ceval.o: Include/pydtrace.h
 Python/dtrace.o: buildinclude $(srcdir)/Include/pydtrace.d Python/ceval.o
 	dtrace -o $@ $(DFLAGS) -C -G -s $(srcdir)/Include/pydtrace.d Python/ceval.o
 
-############################################################################
+
 # Header files
 
 PYTHON_HEADERS= \
@@ -702,7 +702,7 @@ PYTHON_HEADERS= \
 $(LIBRARY_OBJS) $(MODOBJS) Modules/python.o: $(PYTHON_HEADERS)
 
 
-######################################################################
+
 
 # Test the interpreter (twice, once without .pyc files, once with)
 # In the past, we've had problems where bugs in the marshalling or

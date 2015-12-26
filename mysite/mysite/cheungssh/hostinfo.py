@@ -5,7 +5,8 @@ from django.http import HttpResponse
 from mysite.cheungssh.models import ServerConf
 from django.core.cache import cache
 import login_check
-@login_check.login_check()
+from permission_check import permission_check
+@login_check.login_check('',False)
 def hostinfo(request):
 	callback=request.GET.get('callback')
 	group=request.GET.get('group')
@@ -18,10 +19,11 @@ def hostinfo(request):
                 for a in t_groupinfo['content'].values():
 			if a['group']==group:
 				try:
-					if a['owner']==username:
-						host_in_group.append({"ip": "%s@%s" % (a['username'],a['ip']),"id":a["id"]})
+					if a['owner']==username or request.user.is_superuser:
+						
+						host_in_group.append({"ip": "%s" % (a['ip']),"id":a["id"]})
 				except KeyError:
-					print '不存在所属用户'
+					
 					pass
 		hostinfo['content']=host_in_group
 	info=json.dumps(hostinfo,encoding='utf-8',ensure_ascii=False)
@@ -32,7 +34,7 @@ def hostinfo(request):
 	return HttpResponse(backstr)
 	
 	
-@login_check.login_check()
+@login_check.login_check('',False)
 def get_progres(request):
 	fid=request.GET.get('fid')
 	callback=request.GET.get('callback')
@@ -52,7 +54,7 @@ def get_progres(request):
 	else:
 		backstr="%s(%s)"  % (callback,info)
 	return HttpResponse(backstr)
-@login_check.login_check()
+@login_check.login_check('',False)
 def groupinfoall(request):
 	callback=request.GET.get("callback")
 	allconfinfo={"msgtype":"OK","content":{}}
@@ -74,7 +76,7 @@ def groupinfoall(request):
 			t_host["sudo"]=a.Sudo
 			t_host["su"]=a.Su
 			t_host["supassword"]=a.SuPassword
-			#t_host["sudopassword"]=a.SudoPassword
+			t_host["sudopassword"]=a.SudoPassword
 			t_host["loginmethod"]=a.LoginMethod
 			allconfinfo['content'][a.id]=t_host
 			cache.set("allconf",allconfinfo,360000)
@@ -82,13 +84,13 @@ def groupinfoall(request):
 		for b in t_allconfinfo['content'].keys():
 			t_allconfinfo['content'][b]['password']="**********"
 			t_allconfinfo['content'][b]['supassword']="**********"
-			#t_allconfinfo['content'][b]['sudopassword']="**********"
+			t_allconfinfo['content'][b]['sudopassword']="**********"
                 allconfinfo=t_allconfinfo	
-	#allconfinfo_web=allconfinfo['content'].values()
+	
 	allconfinfo_web=[]
 	for a in allconfinfo['content'].values():
 		try:
-			if a['owner'] == username:
+			if a['owner'] == username or request.user.is_superuser: 
 				allconfinfo_web.append(a)
 		except KeyError:
 			pass
@@ -97,11 +99,15 @@ def groupinfoall(request):
 	allconfinfo['content']=allconfinfo_web
 	info=json.dumps(allconfinfo,encoding="utf8",ensure_ascii=False)
 	if callback is None:
-		backstr=info
+		info=info
 	else:
-		backstr="%s(%s)"  % (callback,info)
-	return HttpResponse(backstr)
-@login_check.login_check()
+		info="%s(%s)"  % (callback,info)
+	response=HttpResponse(info)
+	response["Access-Control-Allow-Origin"] = "*"
+	response["Access-Control-Allow-Methods"] = "POST"
+	response["Access-Control-Allow-Credentials"] = "true"
+        return response
+@login_check.login_check('',False)
 def groupinfo(request):
         groupinfo={"msgtype":"OK","content":[]}
         callback=request.GET.get("callback")
@@ -111,7 +117,7 @@ def groupinfo(request):
 		all_group=[]
 		for a in t_groupinfo['content'].values():
 			try:
-				if a['owner']==username:
+				if a['owner']==username  or request.user.is_superuser:
 					all_group.append(a['group'])
 			except KeyError:
 				pass
@@ -129,7 +135,8 @@ def groupinfo(request):
 
 	
 
-@login_check.login_check()
+@login_check.login_check('文件传输日志',False)
+@permission_check('cheungssh.transfile_history_show')
 def translog(request):
 	info={"msgtype":"OK",'content':""}
 	callback=request.GET.get("callback")

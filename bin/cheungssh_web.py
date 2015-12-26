@@ -9,7 +9,9 @@ sys.path.append("/home/cheungssh/mysite/mysite/cheungssh/")
 import paramiko,threading,time,commands,re,Format_Char_Show_web,shutil,random,json,sendinfo,key_resolv
 from mysite.cheungssh.models import ServerConf
 from django.core.cache import cache
-def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data):
+import json
+from redis_to_redis import set_redis_data
+def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data,tid):
 	PROFILE=". /etc/profile 2&>/dev/null;. ~/.bash_profile 2&>/dev/null;. /etc/bashrc 2&>/dev/null;. ~/.bashrc 2&>/dev/null;"
 	PATH="export PATH=$PATH:/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin;"
 	start_time=time.time()
@@ -50,14 +52,14 @@ def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data)
 			error_out='NULL'
 			ResultSum_count="服务器: %s@%s " %(username,ip)
 			Data.All_Servers_num_Succ+=1
-		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+username+"@"+ip,color_status)
+		Show_Result_web_status=Format_Char_Show_web.Show_Char(ResultSum.replace("<","&lt;")+ip,color_status)
 		Show_Result=ResultSum + '\n' +ResultSum_count
 		jindu=int(float(Data.All_Servers_num)/float(Data.All_Servers_num_all)*100)
 		TmpShow=Format_Char_Show_web.Show_Char(Show_Result+" 命令: "+cmd,color_status)  
 		if color_status==1:
-			info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+			info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 		else:
-			info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"OK","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+			info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"OK","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 		b_id=str(random.randint(999999999,99999999999999999))
 		info["id"]=b_id
 		info=json.dumps(info,encoding='utf8',ensure_ascii=False)
@@ -73,19 +75,17 @@ def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data)
 
                 TmpShow=Format_Char_Show_web.Show_Char(Show_Result+" 命令: "+cmd,color_status)
 		jindu=int(float(Data.All_Servers_num)/float(Data.All_Servers_num_all)*100)
-		Show_Result_web_status=Format_Char_Show_web.Show_Char(str(e).replace("<","&lt;")+"\n"+username+"@"+ip,color_status)
-		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":username+"@"+ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
+		Show_Result_web_status=Format_Char_Show_web.Show_Char(str(e).replace("<","&lt;")+"\n"+ip,color_status)
+		info={"msgtype":1,"content":[{"group":group,"servers":[{"ip":ip,"status":"ERR","jindu":jindu,"cmd":cmd,"info":Show_Result_web_status}]}]}
 		info['id']=(str(random.randint(999999999,99999999999999999)))
 		info=json.dumps(info,encoding='utf8',ensure_ascii=False)
-	else:
+	finally:
 		ssh.close()
-	#sendinfo.sendinfo(str({ie_key:info}))
-	######### 硬件检测
 	if Data.excutetype=='cmd':
+		print '命令方式'
 		sendinfo.sendinfo(str({ie_key:info}))
 	elif Data.excutetype=='crontab':
-		# logline的数据格式是 key ：['status', 'runtime', 'user', 'fid', 'runtype', 'ip', 'cmd', 'id', 'createtime']
-		#计划任务命令存储数据格式: { fid :  {}  }
+		print '计划任务'
 		crondlog_show=cache.get('crondlog')
 		if  crondlog_show:
 			lasttime=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
@@ -96,11 +96,10 @@ def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data)
 			else:
 				crondlog_show[Data.fid]['status']="失败"
 			cache.set('crondlog',crondlog_show,8640000000)
-			print "已经写入"
+			
 		else:
-			print "没有crond记录， 则不写"
+			
 			pass
-		pass
 	else:
 		checktime=time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
 		ipinfo={Data.hwtype:ResultSum,'ip':ip,'checktime':checktime}
@@ -113,8 +112,9 @@ def SSH_cmd(ip,username,password,port,loginmethod,keyfile,cmd,ie_key,group,Data)
 		hwinfo[ip][Data.hwtype]=ResultSum
 		hwinfo[ip]['checktime']=checktime
 		cache.set('hwinfo',hwinfo,864000000)
-	#########
-def main(cmd,ie_key,selectserver,Data,excutetype='cmd',hwtype='CPU'):
+	R=set_redis_data('cmd.%s.%s'%(tid,ip),json.dumps(ResultSum,encoding="utf-8",ensure_ascii=False))
+	print "cmd.%s.%s" %(tid,ip)
+def main(cmd,ie_key,selectserver,Data,tid,excutetype='cmd',hwtype='CPU'):
 	Data.excutetype=excutetype
 	Data.hwtype=hwtype
 	Data.FailIP=[]
@@ -137,11 +137,11 @@ def main(cmd,ie_key,selectserver,Data,excutetype='cmd',hwtype='CPU'):
 		else:
 			keyfile='N'
 		if Data.conf[id]["su"]=="Y" and excutetype=='cmd' :
-			b=threading.Thread(target=cheungssh_su.Excute_suroot,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data.conf[id]["supassword"],Data))
+			b=threading.Thread(target=cheungssh_su.Excute_suroot,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data.conf[id]["supassword"],Data,tid))
 		elif Data.conf[id]["sudo"]=="Y" and excutetype=='cmd':
-			b=threading.Thread(target=cheungssh_sudo.Excute_sudo,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data.conf[id]["password"],Data))
+			b=threading.Thread(target=cheungssh_sudo.Excute_sudo,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data.conf[id]["sudopassword"],Data,tid))
 		else:
-			b=threading.Thread(target=SSH_cmd,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data))
+			b=threading.Thread(target=SSH_cmd,args=(Data.conf[id]["ip"],Data.conf[id]["username"],Data.conf[id]["password"],Data.conf[id]["port"],Data.conf[id]["loginmethod"],keyfile,cmd,ie_key,Data.conf[id]["group"],Data,tid))
 		b.start()
 	b.join()
 if __name__=='__main__':
@@ -156,9 +156,10 @@ if __name__=='__main__':
 	for a in fcontent:
 		cmdline=a.strip().split('#')
 		if cmdline[-1]==fid:
-			cmd ="#".join(cmdline[0:-2])  #命令 服务器 fid 
+			cmd ="#".join(cmdline[0:-2]) 
 			selectserver=cmdline[-2]
 			fcontent.close()
 			break
 	print cmd
-	main(cmd,'all-ie',selectserver,Data,'crontab')
+	fcontent.close()
+	main(cmd,'all-ie',selectserver,Data,fid,'crontab')

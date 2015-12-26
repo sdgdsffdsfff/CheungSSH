@@ -18,9 +18,7 @@ CACHES = {
         },
     },
 }
-SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'  #这个增加session数据到redis中，redis在验证的时候， 就不会到数据库中拿去数据了，这个是可行的,只需要开启这一项配置就可以了,cache_db的意思是写入到缓存，如果没有cache_db那就不会写入到缓存
-#SESSION_CACHE_ALIAS = "default"
-#以上需要安装  pip install django-redis-sessions
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db' 
 
 
 
@@ -67,10 +65,11 @@ USE_L10N = True
 # If you set this to False, Django will not use timezone-aware datetimes.
 USE_TZ = True
 
+#SENDFILE_BACKEND="sendfile.backends.development"
+SENDFILE_BACKEND="sendfile.backends.xsendfile"
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
 MEDIA_ROOT = ''
-
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
@@ -84,15 +83,14 @@ STATIC_ROOT = ''
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-############js，img等等静态文件配置
-STATIC_URL = '/static/'
+STATIC_URL = '/cheungssh/static/'
 STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
 	'/home/cheungssh/web/cheungssh/static/',
 )
-################
+
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
@@ -120,8 +118,8 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     # Uncomment the next line for simple clickjacking protection:
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',    ###########
-    'django.middleware.common.CommonMiddleware',#############
+    'corsheaders.middleware.CorsMiddleware',    
+    'django.middleware.common.CommonMiddleware',
 )
 
 ROOT_URLCONF = 'mysite.urls'
@@ -164,8 +162,8 @@ INSTALLED_APPS = (
     #'django.contrib.sites',
     #'mysite.books',
     'mysite.cheungssh',
- 	 'django.contrib.comments',
-	'django.contrib.sites',   #用来添加django自带的评论中心模板
+ 	
+	
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # Uncomment the next line to enable the admin:
